@@ -26,7 +26,7 @@ namespace GlowkiServer
                 {
                     webBuilder.ConfigureKestrel(options =>
                     {
-                        options.Listen(IPAddress.Parse("146.59.18.155"), 5001, listenOptions =>
+                        options.Listen(IPAddress.Parse("146.59.18.155"), 5000, listenOptions =>
                         {
                             //listenOptions.Protocols = HttpProtocols.Http2;
                         });
