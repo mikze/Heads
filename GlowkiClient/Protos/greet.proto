@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option csharp_namespace = "GlowkiServer";
+
+package glowki;
+
+// The greeting service definition.
+service GlowkiService {
+  // Sends a greeting
+  rpc GetEntities (EntitiesRequest) returns (stream Entity);
+}
+
+// The request message containing the user's name.
+message EntitiesRequest {
+}
+
+// The response message containing the greetings.
+message Entity {
+  int32 kind = 1;
+  string params = 3;
+}

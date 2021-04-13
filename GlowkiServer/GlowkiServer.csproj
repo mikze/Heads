@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\greet.proto" GrpcServices="Server" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.27.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleUDP\SimpleUDP.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Box2D.NetStandard">
+      <HintPath>..\..\box2d-netstandard\src\box2dx\Box2D.NetStandard\bin\Debug\netstandard2.1\Box2D.NetStandard.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

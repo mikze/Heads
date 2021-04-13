@@ -1,0 +1,35 @@
+﻿using Grpc.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using GlowkiServer.Chat;
+using static GlowkiServer.ChatRoom;
+
+namespace GlowkiServer.Services
+{
+    public class ChatService : ChatRoomBase
+    {
+        private readonly Chat.ChatRoom _chatroomService;
+
+        public ChatService()
+        {
+            _chatroomService = new Chat.ChatRoom();
+        }
+        public override async Task join(IAsyncStreamReader<Message> requestStream, IServerStreamWriter<Message> responseStream, ServerCallContext context)
+        {
+            if (!await requestStream.MoveNext()) return;
+
+            do
+            {
+                _chatroomService.Join(requestStream.Current.NickName, responseStream);
+                if (requestStream.Current.Msg.StartsWith("!"))
+                    await _chatroomService.HandleMessageAsCommand(requestStream.Current);
+                else
+                    await _chatroomService.BroadcastMessageAsync(requestStream.Current);
+            } while (await requestStream.MoveNext());
+
+            _chatroomService.Remove(context.Peer);
+        }
+    }
+}
