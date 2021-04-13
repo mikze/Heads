@@ -16,7 +16,7 @@ namespace Glowki
         static AsyncDuplexStreamingCall<Message, Message> chat;
         public static string nickname;
         public static string _IP { get; set; }
-        public static void Initialize(string IP = "127.0.0.1")
+        public static void Initialize(string IP = "146.59.18.155")
         {
             _IP = IP;
         }
