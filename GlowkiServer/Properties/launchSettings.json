@@ -3,7 +3,7 @@
     "GlowkiServer": {
       "commandName": "Project",
       "launchBrowser": false,
-      "applicationUrl": "http://146.59.18.155:5000;https://146.59.18.155:5001",
+      "applicationUrl": "http://0.0.0.0:5000;https://0.0.0.0:5001",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
