@@ -17,9 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Box2D.NetStandard">
-      <HintPath>..\..\box2d-netstandard\src\box2dx\Box2D.NetStandard\bin\Debug\netstandard2.1\Box2D.NetStandard.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Box2D.NetStandard" Version="2.4.2-alpha" />
   </ItemGroup>
-
+  
 </Project>
