@@ -24,6 +24,7 @@ namespace Scenes
 {
     internal class TestOnlinceScene : Scene
     {
+        public static bool Enemy = false;
         World world;
         EntityFactory entityFactory;
         Client<Frame> client;
@@ -40,7 +41,6 @@ namespace Scenes
 
         public override void LoadContent()
         {
-            //ProtoHelper.SetGameState();
             Thread.Sleep(500);
             b2DWorld = new B2DWorld(new System.Numerics.Vector2(0.0f, 1.500000000000000e+01f));
             client = new Client<Frame>(0);
@@ -50,7 +50,7 @@ namespace Scenes
             inputClient.Connect(inputEndPoint);
 
             var xx = ProtoHelper.LoadEntities();
-
+            Thread.Sleep(500);
             var camera = new OrthographicCamera(_sceneHandler._graphicsDevice);
 
             world = new WorldBuilder()
@@ -133,6 +133,10 @@ namespace Scenes
                 if (keyboardState.IsKeyDown(Keys.Up))
                 {
                     input |= Input.up;
+                }
+                if(Enemy)
+                {
+                    input |= Input.enemy;
                 }
 
                 inputClient.Send((byte)input, inputEndPoint);

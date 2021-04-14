@@ -16,7 +16,7 @@ namespace GlowkiServer.States
         UDPServer<Frame> UDPServer;
         World world;
         private bool isLoaded;
-        EntityWrap player;
+        EntityWrap player, enemyPlayer;
 
         public GameState(World world)
         {
@@ -32,7 +32,7 @@ namespace GlowkiServer.States
         {
             EntityFactory entityFactory = new EntityFactory(new NormalBodyFactory(world));
             player = entityFactory.CreateDynamicPlayer(300, 350, new Vector2(40, 40), "mikze");
-
+            enemyPlayer = entityFactory.CreateDynamicPlayer(200, 350, new Vector2(40, 40), "mikze2");
             Game.Game.Entities = new List<EntityWrap>() {
             entityFactory.CreateDynamicCircle(200, 50, 30f, "circle"),
             entityFactory.CreateStaticBox(300, 50, new Vector2(1000, 30), ""),
@@ -42,7 +42,7 @@ namespace GlowkiServer.States
             entityFactory.CreateStaticBox(45, 325, new Vector2(100, 10), ""),
             entityFactory.CreateStaticBox(745, 325, new Vector2(100, 10), ""),
             player,
-            entityFactory.CreateDynamicPlayer(200, 350, new Vector2(40, 40), "mikze2")
+            enemyPlayer,
             };
 
             var inputHandler = new InputHandler();
@@ -90,11 +90,11 @@ namespace GlowkiServer.States
         {
             var inputs = (Input)input;
             if (inputs.HasFlag(Input.right))
-                player.body.ApplyForceToCenter(new Vector2(5, 0));
+                if (inputs.HasFlag(Input.enemy)) player.body.ApplyForceToCenter(new Vector2(5, 0)); else enemyPlayer.body.ApplyForceToCenter(new Vector2(5, 0));
             if (inputs.HasFlag(Input.left))
-                player.body.ApplyForceToCenter(new Vector2(-5, 0));
+                if (inputs.HasFlag(Input.enemy)) player.body.ApplyForceToCenter(new Vector2(-5, 0)); else enemyPlayer.body.ApplyForceToCenter(new Vector2(-5, 0));
             if (inputs.HasFlag(Input.up) && MyContactListener.CANJUMP > 0)
-                player.body.ApplyLinearImpulseToCenter(new Vector2(0, -0.4f));
+                if (inputs.HasFlag(Input.enemy)) player.body.ApplyLinearImpulseToCenter(new Vector2(0, -0.4f)); else enemyPlayer.body.ApplyLinearImpulseToCenter(new Vector2(0, -0.4f));
         }
 
         public override void SetToGameState()

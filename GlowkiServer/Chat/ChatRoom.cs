@@ -23,7 +23,10 @@ namespace GlowkiServer.Chat
             {
                 var user = new User() { serverStreamWriter = response, Admin = users.Any() ? false : true };
                 if (users.Any())
+                {
                     SendMessageToSubscriber(new KeyValuePair<string, User>("", user), new Message() { NickName = users.First().Key, Msg = string.Empty }).Wait();
+                    SendMessageToSubscriber(new KeyValuePair<string, User>("", user), new Message() { NickName = "Server", Msg = "!Enemy" }).Wait();
+                }
 
                 users.TryAdd(name, user);
             }

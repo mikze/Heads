@@ -13,7 +13,7 @@ namespace GlowkiServer.Game
         up = 2,
         right = 4,
         left = 8,
-        down = 16,
+        enemy = 16,
     }
     public class InputHandler
     {

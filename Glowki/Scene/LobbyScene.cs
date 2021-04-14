@@ -88,6 +88,10 @@ namespace Scenes
             {
                 ChangeStateToGame();
             }
+            else if (message == "!Enemy" && nickNmae == "Server")
+            {
+                TestOnlinceScene.Enemy = true;
+            }
             else
             {
                 var t = enemyText.Get<Text>();
