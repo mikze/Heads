@@ -41,7 +41,7 @@ namespace GlowkiServer.States
             entityFactory.CreateStaticBox(790, 350, new Vector2(10, 600), ""),
             entityFactory.CreateStaticBox(45, 325, new Vector2(100, 10), ""),
             entityFactory.CreateStaticBox(745, 325, new Vector2(100, 10), ""),
-            entityFactory.CreateStaticBoxSensor(745, 330, new Vector2(30, 30), ""),
+            entityFactory.CreateStaticBoxSensor(740, 340, new Vector2(30, 60), ""),
             player,
             enemyPlayer,
             };
