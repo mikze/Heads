@@ -30,9 +30,10 @@ namespace Scenes
         Client<Frame> client;
         Client<byte> inputClient;
         IPEndPoint inputEndPoint;
-        string _ip;
+        string _ip, points, enemyPoints;
         Entity p;
         B2DWorld b2DWorld;
+
         public TestOnlinceScene(string ip)
         {
             _ip = ip;
@@ -41,16 +42,14 @@ namespace Scenes
 
         public override void LoadContent()
         {
-            Thread.Sleep(500);
             b2DWorld = new B2DWorld(new System.Numerics.Vector2(0.0f, 1.500000000000000e+01f));
             client = new Client<Frame>(0);
             client.Connect(new IPEndPoint(IPAddress.Parse(_ip), 1337));
-
             inputClient = new Client<byte>(0);
             inputClient.Connect(inputEndPoint);
 
             var xx = ProtoHelper.LoadEntities();
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
             var camera = new OrthographicCamera(_sceneHandler._graphicsDevice);
 
             world = new WorldBuilder()

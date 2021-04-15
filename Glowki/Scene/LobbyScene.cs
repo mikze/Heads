@@ -67,7 +67,6 @@ namespace Scenes
                     _playerReadyButtom.Play("NotReady");
                     ProtoHelper.WriteToChat("!NotReady");
                 }
-
                 ready = !ready;
             }
         }
@@ -120,8 +119,7 @@ namespace Scenes
             var viewportAdapter = new DefaultViewportAdapter(_sceneHandler._graphicsDevice);
             var guiRenderer = new GuiSpriteBatchRenderer(_sceneHandler._graphicsDevice, () => Matrix.Identity);
             var font = _sceneHandler._content.Load<BitmapFont>("Sensation");
-            var JoinButton = new Button { Content = "Join to server" };
-            var ReadyButton = new Button { Content = "Ready", Position = new Point(150, 150),Size = new Size(50,50), HorizontalAlignment = HorizontalAlignment.Centre, VerticalAlignment = VerticalAlignment.Centre };
+            var JoinButton = new Button { Content = "Start" };
 
             JoinButton.PressedStateChanged += OnJoinButtonClick;
             BitmapFont.UseKernings = false;
@@ -132,9 +130,9 @@ namespace Scenes
                 Items =
                 {
                     chatText,
-                    JoinButton,
-                    ReadyButton
-                }       
+                    JoinButton
+                },
+                VerticalAlignment = VerticalAlignment.Bottom
             };
 
             var demoScreen = new Screen
