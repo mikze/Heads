@@ -26,6 +26,25 @@ namespace GlowkiServer.States
 
         public override void HandleState()
         {
+            Thread.Sleep(10);
+            if (isLoaded)
+            {               
+                const float TimeStep = 1.0f / 60;
+                const int VelocityIterations = 6;
+                const int PositionIterations = 2;
+                world.Step(TimeStep, VelocityIterations, PositionIterations);
+
+                foreach (var ew in Game.Game.Entities.Where(x => x.entity.Params != ""))
+                {
+                    UDPServer.BroadCast(new Frame
+                    {
+                        id = ew.entity.Id,
+                        X = ew.body.Position.X,
+                        Y = ew.body.Position.Y,
+                        R = ew.body.Transform.GetAngle()
+                    });
+                }
+            }
         }
 
         public override void LoadContent()
@@ -49,42 +68,12 @@ namespace GlowkiServer.States
             var inputHandler = new InputHandler();
             inputHandler.ReciveHandler = handleInput;
 
-            isLoaded = true;
+           
 
             if (UDPServer is null)
                 UDPServer = new UDPServer<Frame>(1337);
-
-            new TaskFactory().StartNew(
-                () => {
-                    while (true)
-                    {
-                        Thread.Sleep(20);
-                        foreach (var ew in Game.Game.Entities.Where(x => x.entity.Params != ""))
-                        {
-                            UDPServer.BroadCast(new Frame
-                            {
-                                id = ew.entity.Id,
-                                X = ew.body.Position.X,
-                                Y = ew.body.Position.Y,
-                                R = ew.body.Transform.GetAngle()
-                            });
-                        }
-                    }
-                }
-                );
-
-            new TaskFactory().StartNew(
-                () => {
-                    while (true)
-                    {
-                        Thread.Sleep(10);
-                        const float TimeStep = 1.0f / 60;
-                        const int VelocityIterations = 6;
-                        const int PositionIterations = 2;
-                        world.Step(TimeStep, VelocityIterations, PositionIterations);
-                    }
-                }
-                );
+          
+            isLoaded = true;
         }
 
         private void handleInput(int input, int clientId)
