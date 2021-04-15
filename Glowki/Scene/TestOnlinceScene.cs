@@ -30,8 +30,8 @@ namespace Scenes
         Client<Frame> client;
         Client<byte> inputClient;
         IPEndPoint inputEndPoint;
-        string _ip, points, enemyPoints;
-        Entity p;
+        string _ip;
+        Entity points, enemyPoints;
         B2DWorld b2DWorld;
 
         public TestOnlinceScene(string ip)
@@ -49,7 +49,6 @@ namespace Scenes
             inputClient.Connect(inputEndPoint);
 
             var xx = ProtoHelper.LoadEntities();
-            Thread.Sleep(1000);
             var camera = new OrthographicCamera(_sceneHandler._graphicsDevice);
 
             world = new WorldBuilder()
@@ -75,13 +74,13 @@ namespace Scenes
                 {
                     var player = entityFactory.CreatePlayer(x.Params, new Vector2(x.PositionX, x.PositionY));
                     player.Get<IRigidBody>().id = x.Id;
-                    if (x.Params == "mikze")
-                        p = player;
-
                 }
                 else
                     entityFactory.CreateStaticBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
             }
+
+            points = entityFactory.CreateText(new Vector2(50,50), "0", 0);
+            enemyPoints = entityFactory.CreateText(new Vector2(720, 50), "0", 0);
 
             new TaskFactory().StartNew(() => 
             {

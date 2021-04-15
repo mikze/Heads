@@ -78,5 +78,26 @@ namespace GlowkiServer.Game
 
             return new EntityWrap(entity, body);
         }
+
+        public EntityWrap CreateStaticBoxSensor(int X, int Y, System.Numerics.Vector2 size, string param)
+        {
+            var entity = new Entity()
+            {
+                Id = ++id,
+                PositionX = X,
+                PositionY = Y,
+                SizeX = (int)size.X,
+                SizeY = (int)size.Y,
+                Params = param,
+                Kind = 1
+            };
+
+            var body = normalBodyFactory.CreateStaticBox(
+                new System.Numerics.Vector2(X, Y),
+                size
+                );
+
+            return new EntityWrap(entity, body);
+        }
     }
 }

@@ -22,7 +22,7 @@ namespace Scenes
         GuiSystem _guiSystem;
         TextBox chatText;
 
-        Entity text, enemyText, playerReadyButtom, enemyReadyButtom;
+        Entity readyText, enemyReadyText,text, enemyText, playerReadyButtom, enemyReadyButtom;
         EntityFactory entityFactory;
         MouseSystem mouseSystem;
         bool ready = false;
@@ -46,8 +46,11 @@ namespace Scenes
 
             text = entityFactory.CreateText(new Vector2(100, 100), ProtoHelper.nickname, 100);
             playerReadyButtom= entityFactory.CreateReadySign(new Vector2(500,110));
+            readyText = entityFactory.CreateText(new Vector2(530, 102), "Not ready", 0);
             enemyText = entityFactory.CreateText(new Vector2(100, 200), "", 100);
             enemyReadyButtom = entityFactory.CreateReadySign(new Vector2(500, 210));
+            enemyReadyText = entityFactory.CreateText(new Vector2(530, 202), "Not ready", 0);
+
 
             LoadGui();
         }
@@ -61,11 +64,17 @@ namespace Scenes
                 {
                     _playerReadyButtom.Play("Ready");
                     ProtoHelper.WriteToChat("!Ready");
+
+                    var _ReadyText = readyText.Get<Text>();
+                    _ReadyText.text = "Ready";
                 }
                 else
                 {
                     _playerReadyButtom.Play("NotReady");
                     ProtoHelper.WriteToChat("!NotReady");
+
+                    var _ReadyText = readyText.Get<Text>();
+                    _ReadyText.text = "Not ready";
                 }
                 ready = !ready;
             }
@@ -76,12 +85,16 @@ namespace Scenes
             if (message == "!Ready")
             {
                 var _enemyReadyButtom = enemyReadyButtom.Get<AnimatedSprite>();
-                _enemyReadyButtom.Play("Ready");              
+                var _enemyReadyText = enemyReadyText.Get<Text>();
+                _enemyReadyButtom.Play("Ready");
+                _enemyReadyText.text = "Ready";
             }
             else if(message == "!NotReady")
             {
                 var _enemyReadyButtom = enemyReadyButtom.Get<AnimatedSprite>();
+                var _enemyReadyText = enemyReadyText.Get<Text>();
                 _enemyReadyButtom.Play("NotReady");
+                _enemyReadyText.text = "Not ready";
             }
             else if(message == "Start" && nickNmae == "Server")
             {
