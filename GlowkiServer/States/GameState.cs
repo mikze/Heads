@@ -8,6 +8,7 @@ using GlowkiServer.B2DWorld;
 using GlowkiServer.Game;
 using System.Threading;
 using System.Numerics;
+using GlowkiServer.Services;
 
 namespace GlowkiServer.States
 {
@@ -34,7 +35,7 @@ namespace GlowkiServer.States
                 const int PositionIterations = 2;
                 world.Step(TimeStep, VelocityIterations, PositionIterations);
 
-                foreach (var ew in Game.Game.Entities.Where(x => x.entity.Params != ""))
+                foreach (var ew in Game.Game.Entities.Where(x => x.dynamic))
                 {
                     UDPServer.BroadCast(new Frame
                     {
@@ -55,12 +56,13 @@ namespace GlowkiServer.States
             Game.Game.Entities = new List<EntityWrap>() {
             entityFactory.CreateDynamicCircle(200, 50, 30f, "circle"),
             entityFactory.CreateStaticBox(300, 50, new Vector2(1000, 30), ""),
-            entityFactory.CreateStaticBox(300, 450, new Vector2(1000, 30), ""),
+            entityFactory.CreateStaticBox(300, 450, new Vector2(1000, 30), "floor"),
             entityFactory.CreateStaticBox(10, 350, new Vector2(10, 600), ""),
             entityFactory.CreateStaticBox(790, 350, new Vector2(10, 600), ""),
             entityFactory.CreateStaticBox(45, 325, new Vector2(100, 10), ""),
             entityFactory.CreateStaticBox(745, 325, new Vector2(100, 10), ""),
-            entityFactory.CreateStaticBoxSensor(730, 330, new Vector2(30, 160), ""),
+            entityFactory.CreateStaticBoxSensor(730, 330, new Vector2(30, 160), "EnemyGoal"),
+            entityFactory.CreateStaticBoxSensor(55, 330, new Vector2(30, 160), "PlayerGoal"),
             player,
             enemyPlayer,
             };
@@ -72,8 +74,20 @@ namespace GlowkiServer.States
 
             if (UDPServer is null)
                 UDPServer = new UDPServer<Frame>(1337);
-          
+
+            MyContactListener.playerScore += PlayerScore;
+            MyContactListener.enemyScore += EnemyScore;
             isLoaded = true;
+        }
+
+        private void EnemyScore()
+        {
+            _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "EnemyScore" });
+        }
+
+        private void PlayerScore()
+        {
+            _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "PlayerScore" });
         }
 
         private void handleInput(int input, int clientId)

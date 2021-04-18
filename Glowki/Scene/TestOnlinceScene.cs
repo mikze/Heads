@@ -1,6 +1,7 @@
 ﻿using Blaster.Systems;
 using Box2D.NetStandard.Dynamics.Bodies;
 using Glowki;
+using Glowki.Components;
 using Glowki.Interfaces;
 using Glowki.Systems;
 using Glowki.UDP;
@@ -33,7 +34,8 @@ namespace Scenes
         string _ip;
         Entity points, enemyPoints;
         B2DWorld b2DWorld;
-
+        int score = 0;
+        int enemyScore = 0;
         public TestOnlinceScene(string ip)
         {
             _ip = ip;
@@ -50,6 +52,8 @@ namespace Scenes
 
             var xx = ProtoHelper.LoadEntities();
             var camera = new OrthographicCamera(_sceneHandler._graphicsDevice);
+
+            ProtoHelper.OnChatRecieve += OnChatRecive;
 
             world = new WorldBuilder()
                     .AddSystem(new RenderSystem(new SpriteBatch(_sceneHandler._graphicsDevice), camera, _sceneHandler._content))
@@ -68,15 +72,17 @@ namespace Scenes
 
             foreach (var x in xx)
             {
-                if (x.Kind == 2)
-                    entityFactory.CreateDynamicCircle(new Vector2(x.PositionX, x.PositionY), 30f).Get<IRigidBody>().id = x.Id;
-                if (x.Kind == 3)
-                {
-                    var player = entityFactory.CreatePlayer(x.Params, new Vector2(x.PositionX, x.PositionY));
-                    player.Get<IRigidBody>().id = x.Id;
+                if (!x.Params.Contains("Goal")) {
+                    if (x.Kind == 2)
+                        entityFactory.CreateDynamicCircle(new Vector2(x.PositionX, x.PositionY), 30f).Get<IRigidBody>().id = x.Id;
+                    if (x.Kind == 3)
+                    {
+                        var player = entityFactory.CreatePlayer(x.Params, new Vector2(x.PositionX, x.PositionY));
+                        player.Get<IRigidBody>().id = x.Id;
+                    }
+                    else
+                        entityFactory.CreateStaticBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
                 }
-                else
-                    entityFactory.CreateStaticBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
             }
 
             points = entityFactory.CreateText(new Vector2(50,50), "0", 0);
@@ -98,6 +104,25 @@ namespace Scenes
             );
 
             IsLoaded = true;
+        }
+
+        private void OnChatRecive(string nickNmae, string message)
+        {
+            if (nickNmae == "Server")
+            {
+                if (message == "PlayerScore")
+                {
+                    var _points = points.Get<Text>();
+                    score++;
+                    _points.text = score.ToString();
+                }
+                if (message == "EnemyScore")
+                {
+                    var _points = enemyPoints.Get<Text>();
+                    enemyScore++;
+                    _points.text = enemyScore.ToString();
+                }
+            }
         }
 
         internal override void DrawScene(GameTime gameTime)

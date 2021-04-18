@@ -68,7 +68,7 @@ namespace GlowkiServer.B2DWorld
             return body;
         }
 
-        public Body CreateStaticBox(Vector2 position, Vector2 size)
+        public Body CreateStaticBox(Vector2 position, Vector2 size, string param = null)
         {
             BodyDef bd = new BodyDef();
             bd.type = BodyType.Static;
@@ -82,6 +82,7 @@ namespace GlowkiServer.B2DWorld
             fd.restitution = 2.000000029802322e-01f;
             fd.density = 1.000000000000000e+00f;
             fd.isSensor = false;
+            fd.userData = param;
 
             PolygonShape shape = new PolygonShape();
 
@@ -105,7 +106,45 @@ namespace GlowkiServer.B2DWorld
             return body;
         }
 
-        public Body CreateDynamicCircle(Vector2 position, float radius)
+        public Body CreateStaticBoxSensor(Vector2 position, Vector2 size, string param = null)
+        {
+            BodyDef bd = new BodyDef();
+            bd.type = BodyType.Static;
+            bd.position = new System.Numerics.Vector2(position.X / 100, position.Y / 100);
+            bd.fixedRotation = false;
+            bd.gravityScale = 1.000000000000000e+00f;
+            var body = b2DWorld.CreateBody(bd);
+
+            FixtureDef fd = new FixtureDef();
+            fd.friction = 2.000000029802322e-01f;
+            fd.restitution = 2.000000029802322e-01f;
+            fd.density = 1.000000000000000e+00f;
+            fd.isSensor = true;
+            fd.userData = param;
+
+            PolygonShape shape = new PolygonShape();
+
+            System.Numerics.Vector2[] vs = new System.Numerics.Vector2[4];
+
+            vs[0] = new System.Numerics.Vector2(-(size.X / 2) / 100, -(size.Y / 2) / 100);
+            vs[1] = new System.Numerics.Vector2((size.X / 2) / 100, -(size.Y / 2) / 100);
+            vs[2] = new System.Numerics.Vector2((size.X / 2) / 100, (size.Y / 2) / 100);
+            vs[3] = new System.Numerics.Vector2(-(size.X / 2) / 100, (size.Y / 2) / 100);
+
+            shape.Set(vs);
+
+            fd.shape = shape;
+
+            fd.shape = shape;
+
+            body.CreateFixture(fd);
+
+            Bodies.Add(body);
+
+            return body;
+        }
+
+        public Body CreateDynamicCircle(Vector2 position, float radius, string param = null)
         {
             BodyDef bd = new BodyDef();
             bd.type = BodyType.Dynamic;
@@ -123,6 +162,7 @@ namespace GlowkiServer.B2DWorld
             CircleShape circle = new CircleShape();
             circle.Radius = radius/100;
             fd.shape = circle;
+            fd.userData = param;
             body.CreateFixture(fd);
             Bodies.Add(body);
 
@@ -168,30 +208,41 @@ namespace GlowkiServer.B2DWorld
 
     public class MyContactListener : Box2D.NetStandard.Dynamics.World.Callbacks.ContactListener
     {
-        public  static int CANJUMP = 1;
+        public static int CANJUMP = 1;
+        public static Action playerScore = new Action(() => { });
+        public static Action enemyScore = new Action(() => { });
         static int bufor = 6;
         public void BeginContact(in Contact contact)
         {
-            if(contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
+            if((contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
+                && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
             {
                 if (bufor == 0)
                 {
                     ++CANJUMP;
-                    Console.WriteLine($"Can jump! {CANJUMP}");
+                    //Console.WriteLine($"Can jump! {CANJUMP}");
                 }
                 else
                     bufor--;
             }
+            if ((contact.FixtureA.UserData?.ToString() == "Ball" || contact.FixtureB.UserData?.ToString() == "Ball")
+                && (contact.FixtureA.UserData?.ToString() == "EnemyGoal" || contact.FixtureB.UserData?.ToString() == "EnemyGoal"))
+                playerScore.Invoke();
+
+            if ((contact.FixtureA.UserData?.ToString() == "Ball" || contact.FixtureB.UserData?.ToString() == "Ball")
+                && (contact.FixtureA.UserData?.ToString() == "PlayerGoal" || contact.FixtureB.UserData?.ToString() == "PlayerGoal"))
+                enemyScore.Invoke();
         }
 
         public void EndContact(in Contact contact)
         {
-            if(contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
+            if((contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
+                && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
             {
                 if (bufor == 0)
                 {
                     --CANJUMP;
-                    Console.WriteLine($"Can't jump! {CANJUMP}");
+                    //Console.WriteLine($"Can't jump! {CANJUMP}");
                 }
                 else
                     bufor--;

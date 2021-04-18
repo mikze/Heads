@@ -52,7 +52,7 @@ namespace GlowkiServer.Game
 
             var body = normalBodyFactory.CreateDynamicCircle(
                 new System.Numerics.Vector2(X, Y),
-                radius
+                radius, "Ball"
                 );
 
             return new EntityWrap(entity, body) { dynamic = true };
@@ -73,7 +73,7 @@ namespace GlowkiServer.Game
 
             var body = normalBodyFactory.CreateStaticBox(
                 new System.Numerics.Vector2(X, Y),
-                size
+                size, param
                 );
 
             return new EntityWrap(entity, body);
@@ -92,11 +92,11 @@ namespace GlowkiServer.Game
                 Kind = 1
             };
 
-            var body = normalBodyFactory.CreateStaticBox(
+            var body = normalBodyFactory.CreateStaticBoxSensor(
                 new System.Numerics.Vector2(X, Y),
-                size
+                size, param
                 );
-
+            
             return new EntityWrap(entity, body);
         }
     }

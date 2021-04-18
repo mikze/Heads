@@ -41,7 +41,7 @@ namespace Blaster.Systems
             if (!body.IsStatic)
             {
                 transform.Position = new Vector2(body.GetPosition().X * 100, body.GetPosition().Y * 100);
-                transform.Rotation = body.Angle;
+                transform.Rotation = -body.Angle;
             }
         }
     }

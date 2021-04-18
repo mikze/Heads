@@ -10,11 +10,11 @@ namespace GlowkiServer.Services
 {
     public class ChatService : ChatRoomBase
     {
-        private readonly Chat.ChatRoom _chatroomService;
+        public static readonly Chat.ChatRoom _chatroomService = new Chat.ChatRoom();
 
         public ChatService()
         {
-            _chatroomService = new Chat.ChatRoom();
+
         }
         public override async Task join(IAsyncStreamReader<Message> requestStream, IServerStreamWriter<Message> responseStream, ServerCallContext context)
         {
