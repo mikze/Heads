@@ -11,7 +11,7 @@ namespace GlowkiServer.States
     internal class LobbyState : State
     {
         World world;
-        bool enemyIsReady, playerIsReady;
+        public static bool enemyIsReady, playerIsReady;
         public LobbyState()
         {
             GlowkiServer.Chat.ChatRoom.onCommandRecived += CommandHandler;

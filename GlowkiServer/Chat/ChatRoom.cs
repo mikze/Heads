@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using GlowkiServer.States;
+using Grpc.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -42,8 +43,11 @@ namespace GlowkiServer.Chat
             }
             if (current.Msg == "!Start" && users[current.NickName].Admin)
             {
-                Game.Game.stateHandler.SetToGameState();
-                await BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "Start" });
+                if (LobbyState.enemyIsReady && LobbyState.playerIsReady)
+                {
+                    Game.Game.stateHandler.SetToGameState();
+                    await BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "Start" });
+                }
             }
 
             onCommandRecived.Invoke(current);
