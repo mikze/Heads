@@ -16,7 +16,9 @@ namespace GlowkiServer.Chat
 
     public class ChatRoom
     {
-        private static ConcurrentDictionary<string, User> users = new ConcurrentDictionary<string, User>();
+        public static User GetAdmin() => users.Values.First(u => u.Admin);
+        public static ConcurrentDictionary<string, User> users = new ConcurrentDictionary<string, User>();
+        public static Action<Message> onCommandRecived = new Action<Message>(m => { });
         public void Join(string name, IServerStreamWriter<Message> response)
         {
             if (!users.Any(x => x.Key == name))
@@ -43,6 +45,8 @@ namespace GlowkiServer.Chat
                 Game.Game.stateHandler.SetToGameState();
                 await BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "Start" });
             }
+
+            onCommandRecived.Invoke(current);
         }
 
         public void Remove(string name) => users.TryRemove(name, out _);
