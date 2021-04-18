@@ -50,7 +50,7 @@ namespace Glowki
 
         public Entity CreatePlayer(string name,Vector2 position)
         {
-            var entity = CreateDynamicCircle(position, 40);
+            var entity = CreateDynamicCircle(position, 30f);
             entity.Attach(new Player(name));
             return entity;
         }

@@ -51,8 +51,8 @@ namespace GlowkiServer.States
         public override void LoadContent()
         {
             EntityFactory entityFactory = new EntityFactory(new NormalBodyFactory(world));
-            player = entityFactory.CreateDynamicPlayer(300, 350, 40, "mikze");
-            enemyPlayer = entityFactory.CreateDynamicPlayer(200, 350, 40, "mikze2");
+            player = entityFactory.CreateDynamicPlayer(300, 350, 30, "mikze");
+            enemyPlayer = entityFactory.CreateDynamicPlayer(200, 350, 30, "mikze2");
             Game.Game.Entities = new List<EntityWrap>() {
             entityFactory.CreateDynamicCircle(200, 50, 30f, "circle"),
             entityFactory.CreateStaticBox(300, 50, new Vector2(1000, 30), ""),
