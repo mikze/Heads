@@ -1,5 +1,6 @@
 ﻿using Box2D.NetStandard.Dynamics.World;
 using GlowkiServer.Game;
+using GlowkiServer.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,13 +22,24 @@ namespace GlowkiServer.States
 
         private void CommandHandler(Message m)
         {
-            if(m.Msg == "!Ready")
+            if (m.Msg == "!Start" && Chat.ChatRoom.users[m.NickName].Admin)
+            {
+                if (enemyIsReady && playerIsReady)
+                {
+                    Game.Game.stateHandler.SetToGameState();
+                    _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "Start" });
+                }
+            }
+
+            if (m.Msg == "!Ready")
             {
                 var admin = Chat.ChatRoom.users[m.NickName].Admin;
                 if (admin)
                     playerIsReady = true;
                 else
                     enemyIsReady = true;
+
+                _ = ChatService._chatroomService.BroadcastMessageAsync(m);
             }
             if(m.Msg == "!NotReady")
             {
@@ -36,6 +48,8 @@ namespace GlowkiServer.States
                     playerIsReady = false;
                 else
                     enemyIsReady = false;
+
+                _ = ChatService._chatroomService.BroadcastMessageAsync(m);
             }
         }
 

@@ -35,23 +35,8 @@ namespace GlowkiServer.Chat
             }
         }
 
-        async internal Task HandleMessageAsCommand(Message current)
-        {
-            if(current.Msg == "!Ready" || current.Msg == "!NotReady")
-            {
-                await BroadcastMessageAsync(current);
-            }
-            if (current.Msg == "!Start" && users[current.NickName].Admin)
-            {
-                if (LobbyState.enemyIsReady && LobbyState.playerIsReady)
-                {
-                    Game.Game.stateHandler.SetToGameState();
-                    await BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "Start" });
-                }
-            }
-
-            onCommandRecived.Invoke(current);
-        }
+        internal async Task HandleMessageAsCommand(Message current)
+            => await new TaskFactory().StartNew(() => onCommandRecived.Invoke(current));
 
         public void Remove(string name) => users.TryRemove(name, out _);
 
