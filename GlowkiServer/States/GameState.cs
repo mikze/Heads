@@ -9,6 +9,7 @@ using GlowkiServer.Game;
 using System.Threading;
 using System.Numerics;
 using GlowkiServer.Services;
+using Box2D.NetStandard.Dynamics.Joints.Revolute;
 
 namespace GlowkiServer.States
 {
@@ -17,7 +18,8 @@ namespace GlowkiServer.States
         UDPServer<Frame> UDPServer;
         World world;
         private bool isLoaded;
-        EntityWrap player, enemyPlayer;
+        EntityWrap player, enemyPlayer, foot;
+        RevoluteJoint legJoint;
 
         public GameState(World world)
         {
@@ -27,50 +29,52 @@ namespace GlowkiServer.States
 
         public override void HandleState()
         {
-            Thread.Sleep(10);
-            if (isLoaded)
-            {               
-                const float TimeStep = 1.0f / 60;
-                const int VelocityIterations = 6;
-                const int PositionIterations = 2;
-                world.Step(TimeStep, VelocityIterations, PositionIterations);
-
-                foreach (var ew in Game.Game.Entities.Where(x => x.dynamic))
+            try
+            {
+                Thread.Sleep(10);
+                if (isLoaded)
                 {
-                    UDPServer.BroadCast(new Frame
+                    const float TimeStep = 1.0f / 60;
+                    const int VelocityIterations = 6;
+                    const int PositionIterations = 2;
+                    world.Step(TimeStep, VelocityIterations, PositionIterations);
+
+                    foreach (var ew in Game.Game.Entities.Where(x => x.clientRefresh))
                     {
-                        id = ew.entity.Id,
-                        X = ew.body.Position.X,
-                        Y = ew.body.Position.Y,
-                        R = ew.body.Transform.GetAngle()
-                    });
+                        UDPServer.BroadCast(new Frame
+                        {
+                            id = ew.entity.Id,
+                            X = ew.body.Position.X,
+                            Y = ew.body.Position.Y,
+                            R = ew.body.Transform.GetAngle()
+                        });
+                    }
                 }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
         }
 
         public override void LoadContent()
         {
             EntityFactory entityFactory = new EntityFactory(new NormalBodyFactory(world));
-            player = entityFactory.CreateDynamicPlayer(300, 350, 30, "mikze");
-            enemyPlayer = entityFactory.CreateDynamicPlayer(200, 350, 30, "mikze2");
-            Game.Game.Entities = new List<EntityWrap>() {
-            entityFactory.CreateDynamicCircle(200, 50, 30f, "circle"),
-            entityFactory.CreateStaticBox(300, 50, new Vector2(1000, 30), ""),
-            entityFactory.CreateStaticBox(300, 450, new Vector2(1000, 30), "floor"),
-            entityFactory.CreateStaticBox(10, 350, new Vector2(10, 600), ""),
-            entityFactory.CreateStaticBox(790, 350, new Vector2(10, 600), ""),
-            entityFactory.CreateStaticBox(45, 325, new Vector2(100, 10), ""),
-            entityFactory.CreateStaticBox(745, 325, new Vector2(100, 10), ""),
-            entityFactory.CreateStaticBoxSensor(730, 330, new Vector2(30, 160), "EnemyGoal"),
-            entityFactory.CreateStaticBoxSensor(55, 330, new Vector2(30, 160), "PlayerGoal"),
-            player,
-            enemyPlayer,
-            };
+            var entitySet = EntitySets.GameStateSet(entityFactory);
+        
+            player = entityFactory.CreateDynamicPlayer(300, 350, 30, "mikze", true);
+            enemyPlayer = entityFactory.CreateDynamicPlayer(200, 350, 30, "mikze2", true);
+            foot = entityFactory.CreateDynamicBox(250, 350, new Vector2(60, 10), "foot", true);
+
+            legJoint = entityFactory.CreateRevoluteJointJoint(player, foot);
+            entityFactory.CreateDistanceJointJoint(player, foot);
+            entitySet.Add(enemyPlayer);
+            entitySet.Add(player);
+            entitySet.Add(foot);
+            Game.Game.Entities = entitySet;
 
             var inputHandler = new InputHandler();
             inputHandler.ReciveHandler = handleInput;
-
-           
 
             if (UDPServer is null)
                 UDPServer = new UDPServer<Frame>(1337);
@@ -97,6 +101,21 @@ namespace GlowkiServer.States
                 if (inputs.HasFlag(Input.enemy)) player.body.ApplyForceToCenter(new Vector2(5, 0)); else enemyPlayer.body.ApplyForceToCenter(new Vector2(5, 0));
             if (inputs.HasFlag(Input.left))
                 if (inputs.HasFlag(Input.enemy)) player.body.ApplyForceToCenter(new Vector2(-5, 0)); else enemyPlayer.body.ApplyForceToCenter(new Vector2(-5, 0));
+            if (inputs.HasFlag(Input.kick))
+            {
+                if (inputs.HasFlag(Input.enemy))
+                {
+                    Console.WriteLine("Turn on/off");
+                    if (!legJoint.IsMotorEnabled)
+                        legJoint.EnableMotor(true);
+                    else
+                        legJoint.EnableMotor(false);
+                }
+                else
+                {
+                    legJoint.MotorSpeed = -legJoint.MotorSpeed;
+                }
+            }
             if (inputs.HasFlag(Input.up) && MyContactListener.CANJUMP > 0)
                 if (inputs.HasFlag(Input.enemy)) player.body.ApplyLinearImpulseToCenter(new Vector2(0, -0.4f)); else enemyPlayer.body.ApplyLinearImpulseToCenter(new Vector2(0, -0.4f));
         }

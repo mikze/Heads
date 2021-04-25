@@ -1,7 +1,5 @@
 ﻿using GlowkiServer.UDP;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace GlowkiServer.Game
@@ -13,7 +11,8 @@ namespace GlowkiServer.Game
         up = 2,
         right = 4,
         left = 8,
-        enemy = 16,
+        kick = 16,
+        enemy = 32
     }
     public class InputHandler
     {

@@ -20,10 +20,17 @@ namespace SimpleUDP.Server
         {
             while (true)
             {
-                var endPoint = new IPEndPoint(IPAddress.Any, 0);
-                var msg = base.Listen(ref endPoint);
-                if (!IsNewClient(msg, endPoint))
-                    RecieveHandler(DeParseCommand(msg), clients.FirstOrDefault(x =>x.EndPoint.Equals(endPoint)).Id);
+                try
+                {
+                    var endPoint = new IPEndPoint(IPAddress.Any, 0);
+                    var msg = base.Listen(ref endPoint);
+                    if (!IsNewClient(msg, endPoint))
+                        RecieveHandler(DeParseCommand(msg), clients.FirstOrDefault(x => x.EndPoint.Equals(endPoint)).Id);
+                }
+                catch
+                {
+                    Console.WriteLine("Blad 2");
+                }
             }
         }
 

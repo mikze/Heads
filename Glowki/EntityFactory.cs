@@ -74,8 +74,9 @@ namespace Glowki
             var wallSprite = new Sprite(wallTexture);
             var entity = _world.CreateEntity();
 
+            var scale = (wallTexture .Height/2)/ radius;
             entity.Attach(wallSprite);
-            var transform = new Transform2(position, 0, Vector2.One/30);
+            var transform = new Transform2(position, 0, Vector2.One/scale);
 
             entity.Attach(transform);
             entity.Attach(_BodyFactory.CreateDynamicCircle(position, radius/100));

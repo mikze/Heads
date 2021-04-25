@@ -74,11 +74,15 @@ namespace Scenes
             {
                 if (!x.Params.Contains("Goal")) {
                     if (x.Kind == 2)
-                        entityFactory.CreateDynamicCircle(new Vector2(x.PositionX, x.PositionY), 30f).Get<IRigidBody>().id = x.Id;
+                        entityFactory.CreateDynamicCircle(new Vector2(x.PositionX, x.PositionY), x.SizeX).Get<IRigidBody>().id = x.Id;
                     if (x.Kind == 3)
                     {
                         var player = entityFactory.CreatePlayer(x.Params, new Vector2(x.PositionX, x.PositionY));
                         player.Get<IRigidBody>().id = x.Id;
+                    }
+                    if (x.Params.Contains("foot"))
+                    {
+                        entityFactory.CreateDynamicBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
                     }
                     else
                         entityFactory.CreateStaticBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
@@ -92,13 +96,17 @@ namespace Scenes
             {
                 while (true)
                 {
-                    var msg = client.Listen();
-                    var RigitBody = BodyFactory.RigidBodies.FirstOrDefault(x => x.id == msg.id);
-                    if (RigitBody != null)
+                    try
                     {
-                        RigitBody.Position = new System.Numerics.Vector2(msg.X, msg.Y);
-                        RigitBody.Angle = msg.R;
+                        var msg = client.Listen();
+                        var RigitBody = BodyFactory.RigidBodies.FirstOrDefault(x => x.id == msg.id);
+                        if (RigitBody != null)
+                        {
+                            RigitBody.Position = new System.Numerics.Vector2(msg.X, msg.Y);
+                            RigitBody.Angle = msg.R;
+                        }
                     }
+                    catch { }
                 }
             }
             );
@@ -157,7 +165,11 @@ namespace Scenes
                 {
                     input |= Input.up;
                 }
-                if(Enemy)
+                if (keyboardState.IsKeyDown(Keys.Space))
+                {
+                    input |= Input.kick;
+                }
+                if (Enemy)
                 {
                     input |= Input.enemy;
                 }
