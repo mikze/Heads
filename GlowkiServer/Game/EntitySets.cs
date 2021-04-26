@@ -13,7 +13,7 @@ namespace GlowkiServer.Game
         public static List<EntityWrap> GameStateSet(EntityFactory entityFactory)
         {
             return new List<EntityWrap>() {
-            entityFactory.CreateDynamicCircle(200, 50, 5f, "Ball", true),
+            entityFactory.CreateDynamicCircle(397, 435, 10f, "Ball", true),
             entityFactory.CreateStaticBox(300, 50, new Vector2(1000, 30), ""),
             entityFactory.CreateStaticBox(300, 450, new Vector2(1000, 30), "floor"),
             entityFactory.CreateStaticBox(10, 350, new Vector2(10, 600), ""),

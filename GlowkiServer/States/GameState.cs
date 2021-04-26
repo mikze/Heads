@@ -31,6 +31,7 @@ namespace GlowkiServer.States
         {
             try
             {
+                //Console.WriteLine($"{player.body.Position} {Game.Game.Entities.First(x => x.entity.Params == "Ball").body.Position} {enemyPlayer.body.Position}");
                 Thread.Sleep(10);
                 if (isLoaded)
                 {
@@ -60,13 +61,13 @@ namespace GlowkiServer.States
         public override void LoadContent()
         {
             EntityFactory entityFactory = new EntityFactory(new NormalBodyFactory(world));
-            var entitySet = EntitySets.GameStateSet(entityFactory);
-        
-            player = entityFactory.CreateDynamicPlayer(300, 350, 30, "mikze", true);
-            enemyPlayer = entityFactory.CreateDynamicPlayer(200, 350, 30, "mikze2", true);
-            foot = entityFactory.CreateDynamicBox(250, 350, new Vector2(60, 10), "foot", true);
 
+            var entitySet = EntitySets.GameStateSet(entityFactory);       
+            player = entityFactory.CreateDynamicPlayer(693, 405, 30, "mikze", true);
+            enemyPlayer = entityFactory.CreateDynamicPlayer(105, 405, 30, "mikze2", true);
+            foot = entityFactory.CreateDynamicBox(250, 350, new Vector2(60, 10), "foot", true);
             legJoint = entityFactory.CreateRevoluteJointJoint(player, foot);
+
             entityFactory.CreateDistanceJointJoint(player, foot);
             entitySet.Add(enemyPlayer);
             entitySet.Add(player);

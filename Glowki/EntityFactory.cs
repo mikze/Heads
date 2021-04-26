@@ -58,8 +58,9 @@ namespace Glowki
         {
             Texture2D rect = new Texture2D(_graphicsDevice, (int)size.X, (int)size.Y);
             Color[] data = new Color[(int)size.X * (int)size.Y];
+
             for (int i = 0; i < data.Length; ++i) data[i] = Color.Chocolate;
-            rect.SetData(data);
+                rect.SetData(data);
 
             var entity = _world.CreateEntity();
             entity.Attach(new Sprite(rect));
@@ -73,11 +74,10 @@ namespace Glowki
             var wallTexture = _contentManager.Load<Texture2D>("ball");
             var wallSprite = new Sprite(wallTexture);
             var entity = _world.CreateEntity();
-
-            var scale = (wallTexture .Height/2)/ radius;
-            entity.Attach(wallSprite);
+            var scale = (wallTexture .Height/2)/radius;           
             var transform = new Transform2(position, 0, Vector2.One/scale);
 
+            entity.Attach(wallSprite);
             entity.Attach(transform);
             entity.Attach(_BodyFactory.CreateDynamicCircle(position, radius/100));
             return entity;

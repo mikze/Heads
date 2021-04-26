@@ -57,7 +57,7 @@ namespace Glowki
             var Client = new ChatRoom.ChatRoomClient(channel);
 
             chat = Client.join();         
-                await chat.RequestStream.WriteAsync(new Message { NickName = nickname, Msg = $"Gowno has joined the room" });
+                await chat.RequestStream.WriteAsync(new Message { NickName = nickname, Msg = $"{nickname} has joined the room" });
                 while (await chat.ResponseStream.MoveNext(cancellationToken: CancellationToken.None))
                 {
                     var response = chat.ResponseStream.Current;
