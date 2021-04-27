@@ -57,7 +57,7 @@ namespace Scenes
             BitmapFont.UseKernings = false;
             Skin.CreateDefault(font);
             var JoinButton = new Button { Content = "Join to server" };
-            IPTextBox = new TextBox { Text = "127.0.0.1", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
+            IPTextBox = new TextBox { Text = "146.59.18.155", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
             NameTextBox = new TextBox { Text = "Name", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
             JoinButton.PressedStateChanged += ChatText_PressedStateChanged;
             var controlTest = new StackPanel
