@@ -13,15 +13,14 @@ namespace GlowkiServer.Game
         public static List<EntityWrap> GameStateSet(EntityFactory entityFactory)
         {
             return new List<EntityWrap>() {
-            entityFactory.CreateDynamicCircle(397, 435, 10f, "Ball", true),
-            entityFactory.CreateStaticBox(300, 50, new Vector2(1000, 30), ""),
-            entityFactory.CreateStaticBox(300, 450, new Vector2(1000, 30), "floor"),
-            entityFactory.CreateStaticBox(10, 350, new Vector2(10, 600), ""),
-            entityFactory.CreateStaticBox(790, 350, new Vector2(10, 600), ""),
-            entityFactory.CreateStaticBox(45, 325, new Vector2(100, 10), ""),
-            entityFactory.CreateStaticBox(745, 325, new Vector2(100, 10), ""),
-            entityFactory.CreateStaticBoxSensor(730, 330, new Vector2(30, 160), "EnemyGoal"),
-            entityFactory.CreateStaticBoxSensor(55, 330, new Vector2(30, 160), "PlayerGoal")
+            entityFactory.CreateStaticBox(512, 50, new Vector2(1024, 30), ""),
+            entityFactory.CreateStaticBox(512, 800, new Vector2(1024, 30), "floor"),
+            entityFactory.CreateStaticBox(1, 400, new Vector2(10, 800), "wall1"),
+            entityFactory.CreateStaticBox(1023, 400, new Vector2(10, 800), "wall2"),
+            entityFactory.CreateStaticBox(56, 593, new Vector2(100, 10), "PlayerGoalTop"),
+            entityFactory.CreateStaticBox(968, 593, new Vector2(100, 10), "EnemyGoalTop"),
+            entityFactory.CreateStaticBoxSensor(937, 799, new Vector2(30, 410), "EnemyGoal"),
+            entityFactory.CreateStaticBoxSensor(87, 799, new Vector2(30, 410), "PlayerGoal")
             };
         }
     }

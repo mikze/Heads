@@ -122,7 +122,7 @@ namespace GlowkiServer.Game
             return new EntityWrap(entity, body) { clientRefresh = clientRefresh };
         }
 
-        public RevoluteJoint CreateRevoluteJointJoint(EntityWrap entityA, EntityWrap entityB) => normalBodyFactory.CreateRevoluteJointJoint(entityA.body, entityB.body);
+        public RevoluteJoint CreateRevoluteJointJoint(EntityWrap entityA, EntityWrap entityB, bool reverse = false) => normalBodyFactory.CreateRevoluteJointJoint(entityA.body, entityB.body, reverse);
         public void CreateDistanceJointJoint(EntityWrap entityA, EntityWrap entityB) => normalBodyFactory.CreateDistanceJoint(entityA.body, entityB.body);
     }
 }

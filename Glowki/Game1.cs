@@ -13,7 +13,7 @@ namespace Glowki
 
         public Game1()
         {
-            _graphics = new GraphicsDeviceManager(this);
+            _graphics = new GraphicsDeviceManager(this);          
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
             IsFixedTimeStep = true;
@@ -30,7 +30,9 @@ namespace Glowki
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
-
+            _graphics.PreferredBackBufferWidth = 1024;
+            _graphics.PreferredBackBufferHeight = 800;
+            _graphics.ApplyChanges();
             sceneHandler = SceneHandlerFactory.CreateSceneHandler(Components, GraphicsDevice, Content);
         }
 

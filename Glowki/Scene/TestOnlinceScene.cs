@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Entities;
 using MonoGame.Extended.Input;
+using MonoGame.Extended.Sprites;
 using SimpleUDP.Client;
 using System;
 using System.Collections.Generic;
@@ -72,7 +73,7 @@ namespace Scenes
 
             foreach (var x in xx)
             {
-                if (!x.Params.Contains("Goal")) {
+               // if (!x.Params.Contains("Goal")) {
                     if (x.Kind == 2)
                         entityFactory.CreateDynamicCircle(new Vector2(x.PositionX, x.PositionY), x.SizeX).Get<IRigidBody>().id = x.Id;
                     if (x.Kind == 3)
@@ -84,15 +85,23 @@ namespace Scenes
                     {
                         entityFactory.CreateDynamicBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
                     }
-                    else
-                        entityFactory.CreateStaticBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
-                }
+                    //else
+                        //entityFactory.CreateStaticBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
+                //}
             }
 
             points = entityFactory.CreateText(new Vector2(50,50), "0", 0);
             enemyPoints = entityFactory.CreateText(new Vector2(720, 50), "0", 0);
 
-            new TaskFactory().StartNew(() => 
+            var wallTexture = _sceneHandler._content.Load<Texture2D>("background2");
+            var wallSprite = new Sprite(wallTexture);
+            var transform = new Transform2(new Vector2(512, 400));
+
+            RenderSystem.BackGround.Item1 = wallSprite;
+            RenderSystem.BackGround.Item2 = transform;
+
+
+        new TaskFactory().StartNew(() => 
             {
                 while (true)
                 {
@@ -168,6 +177,10 @@ namespace Scenes
                 if (keyboardState.IsKeyDown(Keys.Space))
                 {
                     input |= Input.kick;
+                }
+                if (keyboardState.IsKeyUp(Keys.Space))
+                {
+                    input |= Input.kickUp;
                 }
                 if (Enemy)
                 {

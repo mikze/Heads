@@ -17,6 +17,15 @@ namespace GlowkiServer.B2DWorld
 {
     public class NormalBodyFactory
     {
+        enum _entityCategory
+        {
+            Player = 0x0001,
+            Wall = 0x0002,
+            Floor = 0x0004,
+            Ball = 0x0008,
+            Foot = 0x0010,
+        };
+
         World b2DWorld;
         public static List<Body> Bodies { get; set; } = new List<Body>();
         MyContactListener ContactListener;
@@ -39,14 +48,19 @@ namespace GlowkiServer.B2DWorld
             fd.density = 1.000000000000000e+00f;
             fd.isSensor = false;
             fd.userData = param;
+            if (param == "foot")
+            {
+                fd.filter.categoryBits = (ushort)_entityCategory.Foot;
+                fd.filter.maskBits = (ushort)(_entityCategory.Player | _entityCategory.Ball | _entityCategory.Wall | _entityCategory.Foot);
+            }
 
             PolygonShape shape = new PolygonShape();
 
-            System.Numerics.Vector2[] vs = new System.Numerics.Vector2[4];
-            vs[0] = new System.Numerics.Vector2(-(size.X / 2) / 100, -(size.Y / 2) / 100);
-            vs[1] = new System.Numerics.Vector2((size.X / 2) / 100, -(size.Y / 2) / 100);
-            vs[2] = new System.Numerics.Vector2((size.X / 2) / 100, (size.Y / 2) / 100);
-            vs[3] = new System.Numerics.Vector2(-(size.X / 2) / 100, (size.Y / 2) / 100);
+            Vector2[] vs = new System.Numerics.Vector2[4];
+            vs[0] = new Vector2(-(size.X / 2) / 100, -(size.Y / 2) / 100);
+            vs[1] = new Vector2((size.X / 2) / 100, -(size.Y / 2) / 100);
+            vs[2] = new Vector2((size.X / 2) / 100, (size.Y / 2) / 100);
+            vs[3] = new Vector2(-(size.X / 2) / 100, (size.Y / 2) / 100);
             shape.Set(vs);
 
             fd.shape = shape;
@@ -84,15 +98,19 @@ namespace GlowkiServer.B2DWorld
             fd.density = 1.000000000000000e+00f;
             fd.isSensor = false;
             fd.userData = param;
-
+            if (param == "floor")
+            {
+                fd.filter.categoryBits = (ushort)_entityCategory.Floor;
+                fd.filter.maskBits = (ushort)(_entityCategory.Player | _entityCategory.Ball );
+            }
             PolygonShape shape = new PolygonShape();
 
             System.Numerics.Vector2[] vs = new System.Numerics.Vector2[4];
 
-            vs[0] = new System.Numerics.Vector2(-(size.X / 2) / 100, -(size.Y / 2) / 100);
-            vs[1] = new System.Numerics.Vector2((size.X / 2) / 100, -(size.Y / 2) / 100);
-            vs[2] = new System.Numerics.Vector2((size.X / 2) / 100, (size.Y / 2) / 100);
-            vs[3] = new System.Numerics.Vector2(-(size.X / 2) / 100, (size.Y / 2) / 100);
+            vs[0] = new Vector2(-(size.X / 2) / 100, -(size.Y / 2) / 100);
+            vs[1] = new Vector2((size.X / 2) / 100, -(size.Y / 2) / 100);
+            vs[2] = new Vector2((size.X / 2) / 100, (size.Y / 2) / 100);
+            vs[3] = new Vector2(-(size.X / 2) / 100, (size.Y / 2) / 100);
 
             shape.Set(vs);
 
@@ -149,13 +167,13 @@ namespace GlowkiServer.B2DWorld
             bd.type = BodyType.Dynamic;
             bd.position = new System.Numerics.Vector2(position.X / 100, position.Y / 100);
             bd.fixedRotation = !rotate;
-            bd.gravityScale = 1.000000000000000e+00f;
+            bd.gravityScale = param == "Ball" ? 0.091000000000000e+00f : 0.200000000000000e+00f;
             var body = b2DWorld.CreateBody(bd);
 
             FixtureDef fd = new FixtureDef();
             fd.friction = 2.000000029802322e-01f;
-            fd.restitution = 2.000000029802322e-01f;
-            fd.density = 1.000000000000000e+00f;
+            fd.restitution = param == "Ball" ? 0.5f : 2.000000029802322e-01f;
+            fd.density = param == "Ball" ? 0.010000000000000e+00f : 1.000000000000000e+00f;
             fd.isSensor = false;
 
             CircleShape circle = new CircleShape();
@@ -217,19 +235,20 @@ namespace GlowkiServer.B2DWorld
             return body;
         }
 
-        public RevoluteJoint CreateRevoluteJointJoint(Body bodyA, Body bodyB)
+        public RevoluteJoint CreateRevoluteJointJoint(Body bodyA, Body bodyB, bool reverse = false)
         {
             var jd = new RevoluteJointDef();
+            var motorSpeed = 3.501000000000000e+00f;
             jd.bodyA = bodyA;
             jd.bodyB = bodyB;
             jd.localAnchorB = new Vector2(-0.3f,0);
 
             jd.enableLimit = true;
-            jd.enableMotor = false;
-            jd.upperAngle = DegToRad(180);
-            jd.lowerAngle = DegToRad(90);
+            jd.enableMotor = true;
+            jd.upperAngle = reverse ? DegToRad(90)  : DegToRad(180);
+            jd.lowerAngle = reverse ? DegToRad(0)  : DegToRad(90);
             //jd.referenceAngle = DegToRad(90);
-            jd.motorSpeed = 50.001000000000000e+00f;
+            jd.motorSpeed = reverse ? -motorSpeed : motorSpeed;
             jd.maxMotorTorque = 30.120000000000000e+00f;
             return b2DWorld.CreateJoint(jd) as RevoluteJoint;
         }
@@ -261,10 +280,7 @@ namespace GlowkiServer.B2DWorld
                 && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
             {
                 if (bufor == 0)
-                {
                     ++CANJUMP;
-                    //Console.WriteLine($"Can jump! {CANJUMP}");
-                }
                 else
                     bufor--;
             }
@@ -283,10 +299,7 @@ namespace GlowkiServer.B2DWorld
                 && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
             {
                 if (bufor == 0)
-                {
                     --CANJUMP;
-                    //Console.WriteLine($"Can't jump! {CANJUMP}");
-                }
                 else
                     bufor--;
             }

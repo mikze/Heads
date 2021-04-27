@@ -14,6 +14,7 @@ namespace Systems
 {
     public class RenderSystem : EntityDrawSystem
     {
+        public static (Sprite, Transform2) BackGround;
         private readonly SpriteBatch _spriteBatch;
         private readonly OrthographicCamera _camera;
         private ComponentMapper<Sprite> _spriteMapper;
@@ -32,6 +33,8 @@ namespace Systems
         public override void Draw(GameTime gameTime)
         {
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _camera.GetViewMatrix());
+            if (BackGround.Item1 != null && BackGround.Item2 != null)
+                _spriteBatch.Draw(BackGround.Item1, BackGround.Item2);
 
             foreach (var entity in ActiveEntities)
             {

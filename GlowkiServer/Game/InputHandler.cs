@@ -12,7 +12,8 @@ namespace GlowkiServer.Game
         right = 4,
         left = 8,
         kick = 16,
-        enemy = 32
+        kickUp = 32,
+        enemy = 64
     }
     public class InputHandler
     {
