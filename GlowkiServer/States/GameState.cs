@@ -29,7 +29,16 @@ namespace GlowkiServer.States
         public GameState(World world)
         {
             Console.WriteLine("GameState.");
+            Chat.ChatRoom.onCommandRecived += CommandHandler;
             this.world = world;
+        }
+
+        private void CommandHandler(Message msg)
+        {
+            if(msg.Msg == "!disconnect")
+             Console.WriteLine($"{msg.NickName} Disconnected.");
+            if (msg.Msg == "!live")
+                _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "!live" });
         }
 
         public override void HandleState()
@@ -86,9 +95,12 @@ namespace GlowkiServer.States
             EntityFactory entityFactory = new EntityFactory(new NormalBodyFactory(world));
             var entitySet = EntitySets.GameStateSet(entityFactory);
 
+            var User = Chat.ChatRoom.users.Where(x => x.Value.Admin).FirstOrDefault();
+            var enemyUser = Chat.ChatRoom.users.Where(x => !x.Value.Admin).FirstOrDefault();
+
             ball = entityFactory.CreateDynamicCircle(520, 435, 15f, "Ball", true);            
-            player = entityFactory.CreateDynamicPlayer(917, 752, 30, "mikze", true);
-            enemyPlayer = entityFactory.CreateDynamicPlayer(112, 752, 30, "mikze2", true);
+            player = entityFactory.CreateDynamicPlayer(917, 752, 30, $"{User.Key},{User.Value.Skin}", true);
+            enemyPlayer = entityFactory.CreateDynamicPlayer(112, 752, 30, $"{enemyUser.Key},{enemyUser.Value.Skin}", true);
             foot = entityFactory.CreateDynamicBox(250, 350, new Vector2(60, 10), "foot", true);
             enemyFoot = entityFactory.CreateDynamicBox(250, 350, new Vector2(60, 10), "foot", true);
             legJoint = entityFactory.CreateRevoluteJointJoint(player, foot);
@@ -100,8 +112,7 @@ namespace GlowkiServer.States
             playerPosition = player.body.Position;
             enemyPlayerPosition = enemyPlayer.body.Position;
 
-            //entityFactory.CreateDistanceJointJoint(player, foot);
-            //entityFactory.CreateDistanceJointJoint(enemyPlayer, enemyFoot);
+
             entitySet.Add(ball);
             entitySet.Add(enemyPlayer);
             entitySet.Add(player);
@@ -118,6 +129,7 @@ namespace GlowkiServer.States
 
             MyContactListener.playerScore += PlayerScore;
             MyContactListener.enemyScore += EnemyScore;
+            Game.Game.IsLive = true;
             isLoaded = true;
         }
 
@@ -127,10 +139,16 @@ namespace GlowkiServer.States
             _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "EnemyScore" });
         }
 
+        private void BonusAppers()
+        {
+            _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "bonus,speed,300,300" });
+        }
+
         private void PlayerScore()
         {
             resetPositions = true;
-            _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "PlayerScore" });          
+            _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "PlayerScore" });
+            BonusAppers();
         }
 
         private void handleInput(int input, int clientId)
@@ -188,6 +206,7 @@ namespace GlowkiServer.States
 
         public override void SetToLobbyState()
         {
+            Game.Game.IsLive = false;
             _stateHandler.state = States.LobbyState;
             _stateHandler.ChangeScene(new LobbyState());
         }

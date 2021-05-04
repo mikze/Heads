@@ -1,4 +1,4 @@
-﻿using Box2D.NetStandard.Dynamics.World;
+﻿
 using Glowki;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,11 +7,7 @@ using MonoGame.Extended.BitmapFonts;
 using MonoGame.Extended.Entities;
 using MonoGame.Extended.Gui;
 using MonoGame.Extended.Gui.Controls;
-using MonoGame.Extended.Input;
 using MonoGame.Extended.ViewportAdapters;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Systems;
 
 namespace Scenes
@@ -22,11 +18,12 @@ namespace Scenes
         GuiSystem _guiSystem;
         TextBox NameTextBox;
         TextBox IPTextBox;
+
         public override void LoadContent()
         {
             var camera = new OrthographicCamera(_sceneHandler._graphicsDevice);
             world = new WorldBuilder()
-                .AddSystem(new RenderSystem(new SpriteBatch(_sceneHandler._graphicsDevice), camera, _sceneHandler._content))
+                .AddSystem(new RenderSystem(new SpriteBatch(_sceneHandler._graphicsDevice), camera))
                 .Build();
 
             _sceneHandler._gameComponents.Add(world);
@@ -40,8 +37,6 @@ namespace Scenes
 
         internal override void DrawScene(GameTime gameTime)
         {
-            var keyboardState = KeyboardExtended.GetState();
-
             _guiSystem.Draw(gameTime);
         }
 
@@ -57,7 +52,7 @@ namespace Scenes
             BitmapFont.UseKernings = false;
             Skin.CreateDefault(font);
             var JoinButton = new Button { Content = "Join to server" };
-            IPTextBox = new TextBox { Text = "146.59.18.155", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
+            IPTextBox = new TextBox { Text = "127.0.0.1", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
             NameTextBox = new TextBox { Text = "Name", HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom };
             JoinButton.PressedStateChanged += ChatText_PressedStateChanged;
             var controlTest = new StackPanel

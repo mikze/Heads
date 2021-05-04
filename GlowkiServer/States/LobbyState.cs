@@ -22,6 +22,10 @@ namespace GlowkiServer.States
 
         private void CommandHandler(Message m)
         {
+            if (m.Msg.ToLower() == "!live")
+            {
+                _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "!NotLive" });
+            }
             if (m.Msg == "!Start" && Chat.ChatRoom.users[m.NickName].Admin)
             {
                 if (enemyIsReady && playerIsReady)
@@ -51,6 +55,14 @@ namespace GlowkiServer.States
 
                 _ = ChatService._chatroomService.BroadcastMessageAsync(m);
             }
+            if (m.Msg.Contains("!SkinChange"))
+            {
+                var skin = m.Msg.Split(",")[1];
+                Console.WriteLine(skin);
+                var userToSend = Chat.ChatRoom.users.Where(x => x.Key != m.NickName).FirstOrDefault();
+                userToSend.Value.Skin = int.Parse(skin);
+                _ = ChatService._chatroomService.SendMessageToSubscriber(userToSend, new Message() { NickName = "Server", Msg = $"!skin,{skin}" });
+            }
         }
 
         public override void HandleState()
@@ -59,7 +71,7 @@ namespace GlowkiServer.States
         }
 
         public override void LoadContent()
-        {           
+        {
         }
 
         public override void SetToGameState()

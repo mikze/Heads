@@ -14,6 +14,7 @@ namespace Glowki
     {
         static GlowkiServiceClient client;
         static AsyncDuplexStreamingCall<Message, Message> chat;
+        public static bool IsChatLive => chat != null;
         public static string nickname;
         public static string _IP { get; set; }
         public static void Initialize(string IP = "146.59.18.155")
@@ -66,6 +67,7 @@ namespace Glowki
         }
         public async static void WriteToChat(string msg)
         {
+            chat.RequestStream.WriteOptions = new WriteOptions(WriteFlags.BufferHint);
             await chat.RequestStream.WriteAsync(new Message { NickName = nickname, Msg = msg });
         }
 

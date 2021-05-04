@@ -14,27 +14,22 @@ namespace Systems
 {
     public class RenderSystem : EntityDrawSystem
     {
-        public static (Sprite, Transform2) BackGround;
         private readonly SpriteBatch _spriteBatch;
         private readonly OrthographicCamera _camera;
         private ComponentMapper<Sprite> _spriteMapper;
         private ComponentMapper<Transform2> _transforMapper;
         private ComponentMapper<Text> _textMapper;
         private ComponentMapper<AnimatedSprite> _animatedSpriteMapper;
-        private ContentManager _contentManager;
-        public RenderSystem(SpriteBatch spriteBatch, OrthographicCamera camera, ContentManager contentManager) 
+        public RenderSystem(SpriteBatch spriteBatch, OrthographicCamera camera) 
             : base(Aspect.All(typeof(Transform2)).One(typeof(AnimatedSprite), typeof(Sprite), typeof(Text)))
         {
             _spriteBatch = spriteBatch;
             _camera = camera;
-            _contentManager = contentManager;
         }
 
         public override void Draw(GameTime gameTime)
         {
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: _camera.GetViewMatrix());
-            if (BackGround.Item1 != null && BackGround.Item2 != null)
-                _spriteBatch.Draw(BackGround.Item1, BackGround.Item2);
 
             foreach (var entity in ActiveEntities)
             {

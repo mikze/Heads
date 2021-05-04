@@ -24,7 +24,7 @@ using B2DWorld = Box2D.NetStandard.Dynamics.World.World;
 
 namespace Scenes
 {
-    internal class TestOnlinceScene : Scene
+    internal class OnlineGameScene : Scene
     {
         public static bool Enemy = false;
         World world;
@@ -34,10 +34,14 @@ namespace Scenes
         IPEndPoint inputEndPoint;
         string _ip;
         Entity points, enemyPoints;
+        private Sprite wallSprite;
+        private Transform2 transform;
         B2DWorld b2DWorld;
         int score = 0;
         int enemyScore = 0;
-        public TestOnlinceScene(string ip)
+        private SpriteBatch spriteBatch;
+
+        public OnlineGameScene(string ip)
         {
             _ip = ip;
             inputEndPoint = new IPEndPoint(IPAddress.Parse(_ip), 1338);
@@ -45,6 +49,10 @@ namespace Scenes
 
         public override void LoadContent()
         {
+            var wallTexture = _sceneHandler._content.Load<Texture2D>("background2");
+            wallSprite = new Sprite(wallTexture);
+            transform = new Transform2(new Vector2(512, 400));
+
             b2DWorld = new B2DWorld(new System.Numerics.Vector2(0.0f, 1.500000000000000e+01f));
             client = new Client<Frame>(0);
             client.Connect(new IPEndPoint(IPAddress.Parse(_ip), 1337));
@@ -55,9 +63,9 @@ namespace Scenes
             var camera = new OrthographicCamera(_sceneHandler._graphicsDevice);
 
             ProtoHelper.OnChatRecieve += OnChatRecive;
-
+            spriteBatch = new SpriteBatch(_sceneHandler._graphicsDevice);
             world = new WorldBuilder()
-                    .AddSystem(new RenderSystem(new SpriteBatch(_sceneHandler._graphicsDevice), camera, _sceneHandler._content))
+                    .AddSystem(new RenderSystem(spriteBatch, camera))
                     .AddSystem(new PhysicsSystem())
                     .AddSystem(new MouseSystem())
                     .AddSystem(new MovementSystem())
@@ -73,35 +81,23 @@ namespace Scenes
 
             foreach (var x in xx)
             {
-               // if (!x.Params.Contains("Goal")) {
                     if (x.Kind == 2)
                         entityFactory.CreateDynamicCircle(new Vector2(x.PositionX, x.PositionY), x.SizeX).Get<IRigidBody>().id = x.Id;
                     if (x.Kind == 3)
                     {
-                        var player = entityFactory.CreatePlayer(x.Params, new Vector2(x.PositionX, x.PositionY));
+                        var pars = x.Params.Split(",");
+                        var skin = (skin)int.Parse(pars[1]);
+                        var player = entityFactory.CreatePlayer(x.Params, new Vector2(x.PositionX, x.PositionY), skin.ToString());
                         player.Get<IRigidBody>().id = x.Id;
                     }
                     if (x.Params.Contains("foot"))
-                    {
                         entityFactory.CreateDynamicBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
-                    }
-                    //else
-                        //entityFactory.CreateStaticBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
-                //}
             }
 
             points = entityFactory.CreateText(new Vector2(50,50), "0", 0);
             enemyPoints = entityFactory.CreateText(new Vector2(720, 50), "0", 0);
 
-            var wallTexture = _sceneHandler._content.Load<Texture2D>("background2");
-            var wallSprite = new Sprite(wallTexture);
-            var transform = new Transform2(new Vector2(512, 400));
-
-            RenderSystem.BackGround.Item1 = wallSprite;
-            RenderSystem.BackGround.Item2 = transform;
-
-
-        new TaskFactory().StartNew(() => 
+            new TaskFactory().StartNew(() => 
             {
                 while (true)
                 {
@@ -122,7 +118,6 @@ namespace Scenes
 
             IsLoaded = true;
         }
-
         private void OnChatRecive(string nickNmae, string message)
         {
             if (nickNmae == "Server")
@@ -139,11 +134,25 @@ namespace Scenes
                     enemyScore++;
                     _points.text = enemyScore.ToString();
                 }
+                if(message.Contains("bonus"))
+                {
+                    var msg = message.Split(",");
+                    var X = int.Parse(msg[2]);
+                    var Y = int.Parse(msg[3]);
+                    if(msg[1].Contains("speed"))
+                        entityFactory.BonusSpeed(new Vector2(X,Y));
+                }
             }
         }
 
         internal override void DrawScene(GameTime gameTime)
         {
+            if (spriteBatch != null && wallSprite != null && transform != null)
+            { 
+                spriteBatch?.Begin();
+                spriteBatch?.Draw(wallSprite, transform);
+                spriteBatch?.End();
+            }
         }
 
         internal override void UpdateScene(GameTime gameTime)
@@ -181,6 +190,12 @@ namespace Scenes
                 if (keyboardState.IsKeyUp(Keys.Space))
                 {
                     input |= Input.kickUp;
+                }
+                if (keyboardState.IsKeyDown(Keys.Escape))
+                {
+                    world.Dispose();
+                    ProtoHelper.WriteToChat("!disconnect");
+                    _sceneHandler.ChangeScene(new MenuScene());
                 }
                 if (Enemy)
                 {

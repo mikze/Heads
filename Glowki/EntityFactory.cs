@@ -38,6 +38,17 @@ namespace Glowki
             _contentManager = contentManager;
         }
 
+        public Entity CreateImage()
+        {
+            var wallTexture = _contentManager.Load<Texture2D>("background2");
+            var wallSprite = new Sprite(wallTexture);
+            var transform = new Transform2(new Vector2(512, 400));
+            var entity = _world.CreateEntity();
+            wallSprite.Tag = "Background";
+            entity.Attach(wallSprite);
+            entity.Attach(transform);
+            return entity;
+        }
         public Entity CreateText(Vector2 position, string text, int seconds)
         {
             var font = _contentManager.Load<SpriteFont>("Score");
@@ -48,9 +59,9 @@ namespace Glowki
             return entity;
         }
 
-        public Entity CreatePlayer(string name,Vector2 position)
+        public Entity CreatePlayer(string name,Vector2 position, string playerTexture)
         {
-            var entity = CreateDynamicCircle(position, 30f);
+            var entity = CreateDynamicCircle(position, 30f, playerTexture);
             entity.Attach(new Player(name));
             return entity;
         }
@@ -69,9 +80,9 @@ namespace Glowki
             return entity;
         }
 
-        public Entity CreateDynamicCircle(Vector2 position, float radius)
+        public Entity CreateDynamicCircle(Vector2 position, float radius, string texture = null)
         {
-            var wallTexture = _contentManager.Load<Texture2D>("ball");
+            var wallTexture = texture is null ? _contentManager.Load<Texture2D>("ball") : _contentManager.Load<Texture2D>(texture);
             var wallSprite = new Sprite(wallTexture);
             var entity = _world.CreateEntity();
             var scale = (wallTexture .Height/2)/radius;           
@@ -128,6 +139,17 @@ namespace Glowki
             return entity;
         }
 
+        public Entity BonusSpeed(Vector2 position)
+        {
+            var bonusTexture = _contentManager.Load<Texture2D>("BonusSpeed");
+            var bonusSprite = new Sprite(bonusTexture);
+            var transform = new Transform2(position);
+            var entity = _world.CreateEntity();
+
+            entity.Attach(bonusSprite);
+            entity.Attach(transform);
+            return entity;
+        }
         public Entity CreateReadySign(Vector2 position)
         {
             var ReadyTexture = _contentManager.Load<Texture2D>("Ready");

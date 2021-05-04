@@ -11,7 +11,7 @@ namespace GlowkiServer.Game
     {
         public static CancellationToken cancellationToken;
         public static StateHandler stateHandler;
-
+        public static bool IsLive;
         public static void StartGameLoop()
         {
             stateHandler = new StateHandler(new LobbyState());

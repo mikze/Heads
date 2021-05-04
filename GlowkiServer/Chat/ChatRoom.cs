@@ -12,6 +12,7 @@ namespace GlowkiServer.Chat
     {
         public bool Admin { get; set; }
         public bool Ready { get; set; }
+        public int Skin { get; set; }
         public IServerStreamWriter<Message> serverStreamWriter { get; set; }
     }
 
@@ -54,7 +55,7 @@ namespace GlowkiServer.Chat
             }
         }
 
-        private async Task<KeyValuePair<string, User>?> SendMessageToSubscriber(KeyValuePair<string, User> user, Message message)
+        internal async Task<KeyValuePair<string, User>?> SendMessageToSubscriber(KeyValuePair<string, User> user, Message message)
         {
             try
             {

@@ -2,8 +2,6 @@
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended.Entities.Systems;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Glowki.Systems
 {

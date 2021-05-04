@@ -6,16 +6,6 @@ using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.Entities;
 using MonoGame.Extended.Entities.Systems;
-using MonoGame.Extended.Input;
-using MonoGame.Extended.Sprites;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using B2DWorld = Box2D.NetStandard.Dynamics.World.World;
-using System.Threading;
-using System.Threading.Tasks;
-using Glowki;
-using System.Linq;
 using Glowki.Interfaces;
 
 namespace Blaster.Systems

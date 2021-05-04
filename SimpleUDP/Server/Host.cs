@@ -29,7 +29,7 @@ namespace SimpleUDP.Server
                 }
                 catch
                 {
-                    Console.WriteLine("Blad 2");
+                   // Console.WriteLine("Blad 2");
                 }
             }
         }
