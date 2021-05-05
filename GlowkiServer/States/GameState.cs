@@ -19,13 +19,15 @@ namespace GlowkiServer.States
         World world;
         private bool isLoaded;
         EntityWrap player, enemyPlayer, foot, enemyFoot, ball;
+        public static List<EntityWrap> bonuses = new List<EntityWrap>();
         private Vector2 ballPosition;
         private Vector2 playerPosition;
         private Vector2 enemyPlayerPosition;
         RevoluteJoint legJoint, enemyLegJoint;
         float playerFootSpeed, enemyFootSpeed;
         private bool resetPositions;
-
+        EntityFactory entityFactory;
+        public static List<Action> actionsBetweenWorldIteration = new List<Action>();
         public GameState(World world)
         {
             Console.WriteLine("GameState.");
@@ -48,7 +50,6 @@ namespace GlowkiServer.States
                 Thread.Sleep(10);
                 if (isLoaded)
                 {
-                    //Console.WriteLine($"{player.body.Position} {enemyPlayer.body.Position}");
                     const float TimeStep = 1.0f / 60;
                     const int VelocityIterations = 6;
                     const int PositionIterations = 2;
@@ -72,6 +73,13 @@ namespace GlowkiServer.States
                         world.ClearForces();
                         resetPositions = false;
                     }
+                    if(actionsBetweenWorldIteration.Any())
+                    {
+                        foreach (var action in actionsBetweenWorldIteration)
+                            action.Invoke();
+
+                        actionsBetweenWorldIteration.Clear();
+                    }
                     foreach (var ew in Game.Game.Entities.Where(x => x.clientRefresh))
                     {
                         UDPServer.BroadCast(new Frame
@@ -92,7 +100,7 @@ namespace GlowkiServer.States
 
         public override void LoadContent()
         {
-            EntityFactory entityFactory = new EntityFactory(new NormalBodyFactory(world));
+            entityFactory = new EntityFactory(new NormalBodyFactory(world));
             var entitySet = EntitySets.GameStateSet(entityFactory);
 
             var User = Chat.ChatRoom.users.Where(x => x.Value.Admin).FirstOrDefault();
@@ -141,14 +149,18 @@ namespace GlowkiServer.States
 
         private void BonusAppers()
         {
-            _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "bonus,speed,300,300" });
+            var posX = 300;
+            var posY = 753;
+            var entity = entityFactory.CreateSpeedBonus(posX, posY, new Vector2(30, 30), "speedBonus");
+            bonuses.Add(entity);
+            _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = $"bonus,speed,{posX},{posY},{entity.entity.Id}"});
         }
 
         private void PlayerScore()
         {
             resetPositions = true;
             _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = "PlayerScore" });
-            BonusAppers();
+            actionsBetweenWorldIteration.Add(BonusAppers);
         }
 
         private void handleInput(int input, int clientId)

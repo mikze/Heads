@@ -145,7 +145,8 @@ namespace Glowki
             var bonusSprite = new Sprite(bonusTexture);
             var transform = new Transform2(position);
             var entity = _world.CreateEntity();
-
+            var rb = _BodyFactory.CreateStaticBox(new Vector2(0,0), new Vector2(0,0));
+            entity.Attach(rb);
             entity.Attach(bonusSprite);
             entity.Attach(transform);
             return entity;

@@ -122,6 +122,27 @@ namespace GlowkiServer.Game
             return new EntityWrap(entity, body) { clientRefresh = clientRefresh };
         }
 
+        public EntityWrap CreateSpeedBonus(int X, int Y, System.Numerics.Vector2 size, string param)
+        {
+            var entity = new Entity()
+            {
+                Id = ++id,
+                PositionX = X,
+                PositionY = Y,
+                SizeX = (int)size.X,
+                SizeY = (int)size.Y,
+                Params = param,
+                Kind = 4
+            };
+
+            var body = normalBodyFactory.CreateStaticBoxSensor(
+                new System.Numerics.Vector2(X, Y),
+                size, param
+                );
+
+            return new EntityWrap(entity, body);
+        }
+
         public RevoluteJoint CreateRevoluteJointJoint(EntityWrap entityA, EntityWrap entityB, bool reverse = false) => normalBodyFactory.CreateRevoluteJointJoint(entityA.body, entityB.body, reverse);
         public void CreateDistanceJointJoint(EntityWrap entityA, EntityWrap entityB) => normalBodyFactory.CreateDistanceJoint(entityA.body, entityB.body);
     }

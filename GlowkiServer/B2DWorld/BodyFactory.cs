@@ -7,6 +7,8 @@ using Box2D.NetStandard.Dynamics.Joints;
 using Box2D.NetStandard.Dynamics.Joints.Distance;
 using Box2D.NetStandard.Dynamics.Joints.Revolute;
 using Box2D.NetStandard.Dynamics.World;
+using GlowkiServer.Services;
+using GlowkiServer.States;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,7 +58,7 @@ namespace GlowkiServer.B2DWorld
 
             PolygonShape shape = new PolygonShape();
 
-            Vector2[] vs = new System.Numerics.Vector2[4];
+            Vector2[] vs = new Vector2[4];
             vs[0] = new Vector2(-(size.X / 2) / 100, -(size.Y / 2) / 100);
             vs[1] = new Vector2((size.X / 2) / 100, -(size.Y / 2) / 100);
             vs[2] = new Vector2((size.X / 2) / 100, (size.Y / 2) / 100);
@@ -165,7 +167,7 @@ namespace GlowkiServer.B2DWorld
         {
             BodyDef bd = new BodyDef();
             bd.type = BodyType.Dynamic;
-            bd.position = new System.Numerics.Vector2(position.X / 100, position.Y / 100);
+            bd.position = new Vector2(position.X / 100, position.Y / 100);
             bd.fixedRotation = !rotate;
             bd.gravityScale = param == "Ball" ? 0.091000000000000e+00f : 0.200000000000000e+00f;
             var body = b2DWorld.CreateBody(bd);
@@ -291,6 +293,15 @@ namespace GlowkiServer.B2DWorld
             if ((contact.FixtureA.UserData?.ToString() == "Ball" || contact.FixtureB.UserData?.ToString() == "Ball")
                 && (contact.FixtureA.UserData?.ToString() == "PlayerGoal" || contact.FixtureB.UserData?.ToString() == "PlayerGoal"))
                 enemyScore.Invoke();
+
+            if ((contact.FixtureA.UserData?.ToString() == "Ball" || contact.FixtureB.UserData?.ToString() == "Ball")
+                && (contact.FixtureA.UserData?.ToString() == "speedBonus" || contact.FixtureB.UserData?.ToString() == "speedBonus"))
+            {
+                var ball = contact.FixtureA.UserData?.ToString() == "speedBonus" ? contact.FixtureA.Body : contact.FixtureB.Body;
+                var ballWrap = GameState.bonuses.First(x => x.body == ball);
+                _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = $"destroy,{ballWrap.entity.Id}" });
+                GameState.actionsBetweenWorldIteration.Add(() => { ball.GetWorld().DestroyBody(ball); GameState.bonuses.Remove(ballWrap);});      
+            }
         }
 
         public void EndContact(in Contact contact)

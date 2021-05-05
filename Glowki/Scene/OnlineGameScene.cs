@@ -40,6 +40,7 @@ namespace Scenes
         int score = 0;
         int enemyScore = 0;
         private SpriteBatch spriteBatch;
+        Dictionary<int, Entity> bonuses = new Dictionary<int, Entity>();
 
         public OnlineGameScene(string ip)
         {
@@ -139,8 +140,21 @@ namespace Scenes
                     var msg = message.Split(",");
                     var X = int.Parse(msg[2]);
                     var Y = int.Parse(msg[3]);
-                    if(msg[1].Contains("speed"))
-                        entityFactory.BonusSpeed(new Vector2(X,Y));
+                    var id = int.Parse(msg[4]);
+                    if (msg[1].Contains("speed"))
+                    {
+                        var entity = entityFactory.BonusSpeed(new Vector2(X, Y));
+                        entity.Get<IRigidBody>().id = id;
+                        bonuses.Add(id, entity);
+                    }
+                }
+                if (message.Contains("destroy"))
+                {
+                    Console.WriteLine("Remove bonus");
+                    var msg = message.Split(",");
+                    var id = int.Parse(msg[1]);
+                    world.DestroyEntity(bonuses[id]);
+                    bonuses.Remove(id);               
                 }
             }
         }
