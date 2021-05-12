@@ -91,8 +91,10 @@ namespace Scenes
                         var player = entityFactory.CreatePlayer(x.Params, new Vector2(x.PositionX, x.PositionY), skin.ToString());
                         player.Get<IRigidBody>().id = x.Id;
                     }
-                    if (x.Params.Contains("foot"))
-                        entityFactory.CreateDynamicBox(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
+                    if (x.Params == "foot")
+                        entityFactory.CreateFoot(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
+                    if (x.Params == "rfoot")
+                    entityFactory.CreateReverseFoot(new Vector2(x.PositionX, x.PositionY), new Vector2(x.SizeX, x.SizeY)).Get<IRigidBody>().id = x.Id;
             }
 
             points = entityFactory.CreateText(new Vector2(50,50), "0", 0);

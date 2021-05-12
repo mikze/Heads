@@ -80,6 +80,30 @@ namespace Glowki
             return entity;
         }
 
+        public Entity CreateFoot(Vector2 position, Vector2 size)
+        {
+            var footTexture = _contentManager.Load<Texture2D>("foot");
+            var footSprite = new Sprite(footTexture);
+            var entity = _world.CreateEntity();
+
+            entity.Attach(footSprite);
+            entity.Attach(new Transform2(position, 0, Vector2.One));
+            entity.Attach(_BodyFactory.CreateDynamicBox(position, size));
+            return entity;
+        }
+
+        public Entity CreateReverseFoot(Vector2 position, Vector2 size)
+        {
+            var footTexture = _contentManager.Load<Texture2D>("rfoot");
+            var footSprite = new Sprite(footTexture);
+            var entity = _world.CreateEntity();
+
+            entity.Attach(footSprite);
+            entity.Attach(new Transform2(position, 0, Vector2.One));
+            entity.Attach(_BodyFactory.CreateDynamicBox(position, size));
+            return entity;
+        }
+
         public Entity CreateDynamicCircle(Vector2 position, float radius, string texture = null)
         {
             var wallTexture = texture is null ? _contentManager.Load<Texture2D>("ball") : _contentManager.Load<Texture2D>(texture);
