@@ -109,7 +109,7 @@ namespace GlowkiServer.States
             ball = entityFactory.CreateDynamicCircle(520, 435, 15f, "Ball", true);            
             player = entityFactory.CreateDynamicPlayer(917, 752, 30, $"{User.Key},{User.Value.Skin}", true);
             enemyPlayer = entityFactory.CreateDynamicPlayer(112, 752, 30, $"{enemyUser.Key},{enemyUser.Value.Skin}", true);
-            foot = entityFactory.CreateDynamicBox(250, 350, new Vector2(60, 10), "foot", true);
+            foot = entityFactory.CreateDynamicBox(250, 350, new Vector2(35, 10), "rfoot", true);
             enemyFoot = entityFactory.CreateDynamicBox(250, 350, new Vector2(60, 10), "foot", true);
             legJoint = entityFactory.CreateRevoluteJointJoint(player, foot);
             enemyLegJoint = entityFactory.CreateRevoluteJointJoint(enemyPlayer, enemyFoot, true);

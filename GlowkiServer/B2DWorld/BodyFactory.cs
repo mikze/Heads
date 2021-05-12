@@ -50,7 +50,7 @@ namespace GlowkiServer.B2DWorld
             fd.density = 1.000000000000000e+00f;
             fd.isSensor = false;
             fd.userData = param;
-            if (param == "foot")
+            if (param == "foot" || param == "rfoot")
             {
                 fd.filter.categoryBits = (ushort)_entityCategory.Foot;
                 fd.filter.maskBits = (ushort)(_entityCategory.Player | _entityCategory.Ball | _entityCategory.Wall | _entityCategory.Foot);
