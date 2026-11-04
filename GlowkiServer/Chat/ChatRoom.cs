@@ -21,9 +21,12 @@ namespace GlowkiServer.Chat
         public static User GetAdmin() => users.Values.First(u => u.Admin);
         public static ConcurrentDictionary<string, User> users = new ConcurrentDictionary<string, User>();
         public static Action<Message> onCommandRecived = new Action<Message>(m => { });
-        public void Join(string name, IServerStreamWriter<Message> response)
+        // Zwraca false, gdy nick jest już zajęty przez inne połączenie.
+        public bool Join(string name, IServerStreamWriter<Message> response)
         {
-            if (!users.Any(x => x.Key == name))
+            if (users.TryGetValue(name, out var existing))
+                return existing.serverStreamWriter == response;
+
             {
                 var user = new User() { serverStreamWriter = response, Admin = users.Any() ? false : true };
                 if (users.Any())
@@ -34,6 +37,14 @@ namespace GlowkiServer.Chat
 
                 users.TryAdd(name, user);
             }
+            return true;
+        }
+
+        // Usuwa gracza tylko wtedy, gdy to jego połączenie się zakończyło.
+        public void Remove(string name, IServerStreamWriter<Message> response)
+        {
+            if (users.TryGetValue(name, out var user) && user.serverStreamWriter == response)
+                users.TryRemove(name, out _);
         }
 
         internal async Task HandleMessageAsCommand(Message current)

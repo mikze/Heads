@@ -16,16 +16,27 @@ namespace GlowkiServer.Services
         {
             if (!await requestStream.MoveNext()) return;
 
-            do
+            var nickName = requestStream.Current.NickName;
+            if (!_chatroomService.Join(nickName, responseStream))
             {
-                _chatroomService.Join(requestStream.Current.NickName, responseStream);
-                if (requestStream.Current.Msg.StartsWith("!"))
-                    await _chatroomService.HandleMessageAsCommand(requestStream.Current);
-                else
-                    await _chatroomService.BroadcastMessageAsync(requestStream.Current);
-            } while (await requestStream.MoveNext());
+                await responseStream.WriteAsync(new Message() { NickName = "Server", Msg = "!NameTaken" });
+                return;
+            }
 
-            _chatroomService.Remove(context.Peer);
+            try
+            {
+                do
+                {
+                    if (requestStream.Current.Msg.StartsWith("!"))
+                        await _chatroomService.HandleMessageAsCommand(requestStream.Current);
+                    else
+                        await _chatroomService.BroadcastMessageAsync(requestStream.Current);
+                } while (await requestStream.MoveNext());
+            }
+            finally
+            {
+                _chatroomService.Remove(nickName, responseStream);
+            }
         }
     }
 }

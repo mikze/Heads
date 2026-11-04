@@ -18,6 +18,13 @@ namespace Scenes
         GuiSystem _guiSystem;
         TextBox NameTextBox;
         TextBox IPTextBox;
+        private readonly string message;
+
+        // message: opcjonalny komunikat, np. powód powrotu z lobby.
+        public MenuScene(string message = null)
+        {
+            this.message = message;
+        }
 
         public override void LoadContent()
         {
@@ -30,7 +37,7 @@ namespace Scenes
 
             var entityFactory = new EntityFactory(world, _sceneHandler._content, _sceneHandler._graphicsDevice);
 
-            entityFactory.CreateText(new Vector2(100, 100), "MenuScene", 100);
+            entityFactory.CreateText(new Vector2(100, 100), message ?? "MenuScene", 100);
 
             LoadGui();
         }

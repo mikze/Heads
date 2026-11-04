@@ -67,8 +67,16 @@ namespace Glowki
         }
         public async static void WriteToChat(string msg)
         {
-            chat.RequestStream.WriteOptions = new WriteOptions(WriteFlags.BufferHint);
-            await chat.RequestStream.WriteAsync(new Message { NickName = nickname, Msg = msg });
+            // async void: nieobsłużony wyjątek zamknąłby całą grę, więc tylko go logujemy.
+            try
+            {
+                chat.RequestStream.WriteOptions = new WriteOptions(WriteFlags.BufferHint);
+                await chat.RequestStream.WriteAsync(new Message { NickName = nickname, Msg = msg });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Nie udało się wysłać wiadomości \"{msg}\": {e.Message}");
+            }
         }
 
         public static Action<string,string> OnChatRecieve = (nichName, message) => { };

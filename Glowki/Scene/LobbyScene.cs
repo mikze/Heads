@@ -40,6 +40,8 @@ namespace Scenes
 
         bool ready = false;
         private bool? live = null;
+        private volatile bool nameTaken;
+        private string backToMenuReason;
         public LobbyScene()
         {                   
             plyerTextureTransform = new Transform2(new Vector2(640, 102));
@@ -82,8 +84,18 @@ namespace Scenes
             ProtoHelper.WriteToChat("!live");
 
 
-            while (live == null)
+            // Czekamy na odpowiedź serwera, ale nie w nieskończoność (inaczej okno się zawiesza).
+            var deadline = DateTime.Now.AddSeconds(5);
+            while (live == null && DateTime.Now < deadline)
                 Thread.Sleep(10);
+
+            if (nameTaken)
+                backToMenuReason = $"Nick \"{ProtoHelper.nickname}\" jest zajety";
+            else if (live == null)
+                backToMenuReason = "Serwer nie odpowiada";
+
+            if (backToMenuReason != null)
+                return;
 
             if ((bool)live == true)
                 ChangeStateToGame();
@@ -92,8 +104,8 @@ namespace Scenes
             var upArrow = _sceneHandler._content.Load<Texture2D>("MiniHead1");
             playerSprite = new Sprite(player);
             enemySprite = new Sprite(player);
-            upArrowSprite = new Sprite(_sceneHandler._content.Load<Texture2D>("upArrow"));
-            downArrowSprite = new Sprite(_sceneHandler._content.Load<Texture2D>("downArrow"));
+            upArrowSprite = new Sprite(_sceneHandler._content.Load<Texture2D>("UpArrow"));
+            downArrowSprite = new Sprite(_sceneHandler._content.Load<Texture2D>("DownArrow"));
         }
 
         private void mouseClick()
@@ -143,6 +155,11 @@ namespace Scenes
                     live = true;
                 if (message.ToLower() == "!notlive")
                     live = false;
+                if (message == "!NameTaken")
+                {
+                    nameTaken = true;
+                    live = false;
+                }
                 if (message.ToLower().Contains("!skin"))
                 {
                     var skin = (skin)int.Parse(message.Split(",")[1]);
@@ -196,6 +213,15 @@ namespace Scenes
 
         internal override void UpdateScene(GameTime gameTime)
         {
+            if (backToMenuReason != null)
+            {
+                ProtoHelper.OnChatRecieve -= OnChatRecive;
+                MouseSystem.OnMouseLeftClick -= mouseClick;
+                world.Dispose();
+                _sceneHandler.ChangeScene(new MenuScene(backToMenuReason));
+                return;
+            }
+
             var keyboardState = KeyboardExtended.GetState();
             if (keyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Enter))
             {

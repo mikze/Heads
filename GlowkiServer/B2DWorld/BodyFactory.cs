@@ -276,7 +276,7 @@ namespace GlowkiServer.B2DWorld
         public static Action playerScore = new Action(() => { });
         public static Action enemyScore = new Action(() => { });
         static int bufor = 6;
-        public void BeginContact(in Contact contact)
+        public override void BeginContact(in Contact contact)
         {
             if((contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
                 && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
@@ -304,7 +304,7 @@ namespace GlowkiServer.B2DWorld
             }
         }
 
-        public void EndContact(in Contact contact)
+        public override void EndContact(in Contact contact)
         {
             if((contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
                 && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
@@ -316,12 +316,12 @@ namespace GlowkiServer.B2DWorld
             }
         }
 
-        public void PostSolve(in Contact contact, in ContactImpulse impulse)
+        public override void PostSolve(in Contact contact, in ContactImpulse impulse)
         {
            
         }
 
-        public void PreSolve(in Contact contact, in Manifold oldManifold)
+        public override void PreSolve(in Contact contact, in Manifold oldManifold)
         {
             
         }

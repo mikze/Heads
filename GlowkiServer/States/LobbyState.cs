@@ -59,9 +59,13 @@ namespace GlowkiServer.States
             {
                 var skin = m.Msg.Split(",")[1];
                 Console.WriteLine(skin);
-                var userToSend = Chat.ChatRoom.users.Where(x => x.Key != m.NickName).FirstOrDefault();
-                userToSend.Value.Skin = int.Parse(skin);
-                _ = ChatService._chatroomService.SendMessageToSubscriber(userToSend, new Message() { NickName = "Server", Msg = $"!skin,{skin}" });
+                // Skin należy do gracza, który go zmienił; przeciwnik (jeśli już jest) dostaje tylko powiadomienie.
+                if (Chat.ChatRoom.users.TryGetValue(m.NickName, out var sender))
+                    sender.Skin = int.Parse(skin);
+
+                var userToSend = Chat.ChatRoom.users.FirstOrDefault(x => x.Key != m.NickName);
+                if (userToSend.Value != null)
+                    _ = ChatService._chatroomService.SendMessageToSubscriber(userToSend, new Message() { NickName = "Server", Msg = $"!skin,{skin}" });
             }
         }
 
