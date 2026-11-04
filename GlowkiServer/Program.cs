@@ -1,37 +1,37 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Hosting;
+using GlowkiServer.Hubs;
+using GlowkiServer.Lobby;
+using Microsoft.Extensions.FileProviders;
 
-namespace GlowkiServer
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<Room>();
+
+// Front w trybie deweloperskim (next dev) działa na innym porcie, więc musi móc się połączyć.
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
+    .SetIsOriginAllowed(_ => true)
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials()));
+
+var app = builder.Build();
+
+app.UseCors();
+
+// Zbudowany front (npm run build w Web/) serwujemy z tego samego adresu co serwer gry.
+var webRoot = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, app.Configuration["WebRoot"] ?? "../Web/out"));
+if (Directory.Exists(webRoot))
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            Game.Game.StartGameLoop();
-            CreateHostBuilder(args).Build().Run();
-        }
-
-        // Additional configuration is required to successfully run gRPC on macOS.
-        // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.ConfigureKestrel(options =>
-                    {
-                        options.Listen(IPAddress.Any, 5000, listenOptions =>
-                        {
-                            //listenOptions.Protocols = HttpProtocols.Http2;146.59.18.155
-                        });
-                    });
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+    var files = new PhysicalFileProvider(webRoot);
+    app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = files });
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = files });
+    Console.WriteLine($"Front serwowany z {webRoot}");
 }
+else
+{
+    Console.WriteLine($"Brak zbudowanego frontu w {webRoot} — uruchom 'npm run dev' w katalogu Web.");
+}
+
+app.MapHub<GameHub>("/game");
+
+app.Run();

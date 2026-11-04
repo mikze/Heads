@@ -1,4 +1,4 @@
-﻿using Box2D.NetStandard.Collision;
+using Box2D.NetStandard.Collision;
 using Box2D.NetStandard.Collision.Shapes;
 using Box2D.NetStandard.Dynamics.Bodies;
 using Box2D.NetStandard.Dynamics.Contacts;
@@ -7,8 +7,6 @@ using Box2D.NetStandard.Dynamics.Joints;
 using Box2D.NetStandard.Dynamics.Joints.Distance;
 using Box2D.NetStandard.Dynamics.Joints.Revolute;
 using Box2D.NetStandard.Dynamics.World;
-using GlowkiServer.Services;
-using GlowkiServer.States;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,13 +27,9 @@ namespace GlowkiServer.B2DWorld
         };
 
         World b2DWorld;
-        public static List<Body> Bodies { get; set; } = new List<Body>();
-        MyContactListener ContactListener;
         public NormalBodyFactory(World b2DWorld)
-        {          
+        {
             this.b2DWorld = b2DWorld;
-            ContactListener = new MyContactListener();
-            b2DWorld.SetContactListener(ContactListener);
         }
         public Body CreateDynamicBox(Vector2 position, Vector2 size, bool sensor = false, string param = null)
         {
@@ -80,7 +74,6 @@ namespace GlowkiServer.B2DWorld
                 var footSensorFixture = body.CreateFixture(fd2);              
             }
 
-            Bodies.Add(body);
             
             return body;
         }
@@ -120,7 +113,6 @@ namespace GlowkiServer.B2DWorld
 
             body.CreateFixture(fd);
 
-            Bodies.Add(body);
 
             return body;
         }
@@ -158,7 +150,6 @@ namespace GlowkiServer.B2DWorld
 
             body.CreateFixture(fd);
 
-            Bodies.Add(body);
 
             return body;
         }
@@ -196,7 +187,6 @@ namespace GlowkiServer.B2DWorld
             }
 
             body.CreateFixture(fd);
-            Bodies.Add(body);
 
             return body;
         }
@@ -232,7 +222,6 @@ namespace GlowkiServer.B2DWorld
 
             fd.shape = shape;
             body.CreateFixture(fd);
-            Bodies.Add(body);
 
             return body;
         }
@@ -270,60 +259,62 @@ namespace GlowkiServer.B2DWorld
         float DegToRad(float angle) => MathF.PI * angle / 180.0f;
     }
 
-    public class MyContactListener : Box2D.NetStandard.Dynamics.World.Callbacks.ContactListener
+    public enum Goal { Left, Right }
+
+    /// <summary>
+    /// Wykrywa gole, zebranie bonusu i kontakt graczy z podłogą (skok).
+    /// Jeden na mecz, żeby kolejne mecze nie dzieliły stanu.
+    /// </summary>
+    public class MatchContactListener : Box2D.NetStandard.Dynamics.World.Callbacks.ContactListener
     {
-        public static int CANJUMP = 1;
-        public static Action playerScore = new Action(() => { });
-        public static Action enemyScore = new Action(() => { });
-        static int bufor = 6;
+        public int CanJump = 1;
+        private int buffer = 6;
+
+        public event Action<Goal> BallInGoal;
+        public event Action<Body> BonusTaken;
+
+        private static bool Involves(in Contact contact, string tag) =>
+            contact.FixtureA.UserData?.ToString() == tag || contact.FixtureB.UserData?.ToString() == tag;
+
         public override void BeginContact(in Contact contact)
         {
-            if((contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
-                && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
+            if (Involves(contact, "elo") && Involves(contact, "floor"))
             {
-                if (bufor == 0)
-                    ++CANJUMP;
+                if (buffer == 0)
+                    ++CanJump;
                 else
-                    bufor--;
+                    buffer--;
             }
-            if ((contact.FixtureA.UserData?.ToString() == "Ball" || contact.FixtureB.UserData?.ToString() == "Ball")
-                && (contact.FixtureA.UserData?.ToString() == "EnemyGoal" || contact.FixtureB.UserData?.ToString() == "EnemyGoal"))
-                playerScore.Invoke();
 
-            if ((contact.FixtureA.UserData?.ToString() == "Ball" || contact.FixtureB.UserData?.ToString() == "Ball")
-                && (contact.FixtureA.UserData?.ToString() == "PlayerGoal" || contact.FixtureB.UserData?.ToString() == "PlayerGoal"))
-                enemyScore.Invoke();
+            if (!Involves(contact, "Ball"))
+                return;
 
-            if ((contact.FixtureA.UserData?.ToString() == "Ball" || contact.FixtureB.UserData?.ToString() == "Ball")
-                && (contact.FixtureA.UserData?.ToString() == "speedBonus" || contact.FixtureB.UserData?.ToString() == "speedBonus"))
+            // EnemyGoal to bramka po prawej, PlayerGoal po lewej.
+            if (Involves(contact, "EnemyGoal"))
+                BallInGoal?.Invoke(Goal.Right);
+            if (Involves(contact, "PlayerGoal"))
+                BallInGoal?.Invoke(Goal.Left);
+
+            if (Involves(contact, "speedBonus"))
             {
-                var ball = contact.FixtureA.UserData?.ToString() == "speedBonus" ? contact.FixtureA.Body : contact.FixtureB.Body;
-                var ballWrap = GameState.bonuses.First(x => x.body == ball);
-                _ = ChatService._chatroomService.BroadcastMessageAsync(new Message() { NickName = "Server", Msg = $"destroy,{ballWrap.entity.Id}" });
-                GameState.actionsBetweenWorldIteration.Add(() => { ball.GetWorld().DestroyBody(ball); GameState.bonuses.Remove(ballWrap);});      
+                var bonus = contact.FixtureA.UserData?.ToString() == "speedBonus" ? contact.FixtureA.Body : contact.FixtureB.Body;
+                BonusTaken?.Invoke(bonus);
             }
         }
 
         public override void EndContact(in Contact contact)
         {
-            if((contact.FixtureA.UserData?.ToString() == "elo" || contact.FixtureB.UserData?.ToString() == "elo")
-                && (contact.FixtureA.UserData?.ToString() == "floor" || contact.FixtureB.UserData?.ToString() == "floor"))
+            if (Involves(contact, "elo") && Involves(contact, "floor"))
             {
-                if (bufor == 0)
-                    --CANJUMP;
+                if (buffer == 0)
+                    --CanJump;
                 else
-                    bufor--;
+                    buffer--;
             }
         }
 
-        public override void PostSolve(in Contact contact, in ContactImpulse impulse)
-        {
-           
-        }
+        public override void PostSolve(in Contact contact, in ContactImpulse impulse) { }
 
-        public override void PreSolve(in Contact contact, in Manifold oldManifold)
-        {
-            
-        }
+        public override void PreSolve(in Contact contact, in Manifold oldManifold) { }
     }
 }
