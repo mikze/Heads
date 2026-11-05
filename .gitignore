@@ -57,3 +57,24 @@ monodroid*.msi
 *.dll
 /Blaster/.vs/Blaster/v16/TestStore/0/000.testlog
 /Blaster/.vs/Blaster/v16/TestStore/0/testlog.manifest
+
+#IDE
+.vs/
+.idea/
+.vscode/
+*.swp
+
+#.NET
+[Oo]bj/
+[Bb]in/
+*.nupkg
+TestResults/
+
+#Node / Next.js
+node_modules/
+.next/
+Web/out/
+next-env.d.ts
+*.tsbuildinfo
+npm-debug.log*
+.env*.local
