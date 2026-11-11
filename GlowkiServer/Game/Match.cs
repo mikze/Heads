@@ -37,6 +37,7 @@ namespace GlowkiServer.Game
         private const int PositionIterations = 2;
         private static readonly TimeSpan StepInterval = TimeSpan.FromMilliseconds(10);
         private static readonly TimeSpan InputInterval = TimeSpan.FromSeconds(1.0 / 60);
+        private const int ballStartX = 520;
 
         private readonly IClientProxy clients;
         private readonly World world;
@@ -77,7 +78,7 @@ namespace GlowkiServer.Game
             entityFactory = new EntityFactory(new NormalBodyFactory(world));
             entities = EntitySets.GameStateSet(entityFactory);
 
-            ball = entityFactory.CreateDynamicCircle(520, 435, 15f, "Ball", true);
+            ball = entityFactory.CreateDynamicCircle(ballStartX, 435, 15f, "Ball", true);
             rightPlayer = entityFactory.CreateDynamicPlayer(917, 752, 30, "PlayerRight", true);
             leftPlayer = entityFactory.CreateDynamicPlayer(112, 752, 30, "PlayerLeft", true);
             rightFoot = entityFactory.CreateDynamicBox(250, 350, new Vector2(35, 10), "rfoot", true);
@@ -225,19 +226,27 @@ namespace GlowkiServer.Game
             if (goal == Goal.Right)
             {
                 leftScore++;
-                afterStep.Add(SpawnBonus);
             }
             else
             {
                 rightScore++;
             }
 
+            afterStep.Add(SpawnBonus);
             _ = clients.SendAsync("Score", new { left = leftScore, right = rightScore });
         }
 
+        /// <summary>Bonus w losowym miejscu między bramkami, od podłogi do wysokości skoku.</summary>
         private void SpawnBonus()
         {
-            var bonus = entityFactory.CreateSpeedBonus(300, 753, new Vector2(30, 30), "speedBonus");
+            // Pas nad środkiem boiska pomijamy: po golu piłka spada tam prosto z (520, 435)
+            // i od razu zebrałaby bonus.
+            int x;
+            do x = Random.Shared.Next(150, 875);
+            while (Math.Abs(x - ballStartX) < 60);
+            var y = Random.Shared.Next(450, 754);
+
+            var bonus = entityFactory.CreateSpeedBonus(x, y, new Vector2(30, 30), "speedBonus");
             bonuses.Add(bonus);
             _ = clients.SendAsync("BonusSpawned", bonus.entity);
         }
