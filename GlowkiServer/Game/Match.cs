@@ -38,6 +38,8 @@ namespace GlowkiServer.Game
         private static readonly TimeSpan StepInterval = TimeSpan.FromMilliseconds(10);
         private static readonly TimeSpan InputInterval = TimeSpan.FromSeconds(1.0 / 60);
         private const int ballStartX = 520;
+        // Docelowa wysokość skoku w metrach Box2D (1 m = 100 px).
+        private const float JumpHeight = 1.5f;
 
         private readonly IClientProxy clients;
         private readonly World world;
@@ -54,6 +56,8 @@ namespace GlowkiServer.Game
 
         private volatile int rightInput = (int)Input.none;
         private volatile int leftInput = (int)Input.none;
+        // Czy skok był wciśnięty w poprzednim kroku — skaczemy tylko w chwili wciśnięcia.
+        private bool rightJumpHeld, leftJumpHeld;
         private bool resetPositions;
         private int leftScore, rightScore;
 
@@ -134,8 +138,8 @@ namespace GlowkiServer.Game
 
                     if (now >= nextInput)
                     {
-                        ApplyInput((Input)rightInput, rightPlayer.body, rightLeg, rightFootSpeed);
-                        ApplyInput((Input)leftInput, leftPlayer.body, leftLeg, leftFootSpeed);
+                        ApplyInput((Input)rightInput, rightPlayer.body, rightFoot.body, rightLeg, rightFootSpeed, ref rightJumpHeld);
+                        ApplyInput((Input)leftInput, leftPlayer.body, leftFoot.body, leftLeg, leftFootSpeed, ref leftJumpHeld);
                         nextInput += InputInterval;
                     }
 
@@ -182,7 +186,7 @@ namespace GlowkiServer.Game
             body.SetTransform(position, 0);
         }
 
-        private void ApplyInput(Input inputs, Body player, RevoluteJoint leg, float footSpeed)
+        private void ApplyInput(Input inputs, Body player, Body foot, RevoluteJoint leg, float footSpeed, ref bool jumpHeld)
         {
             if (inputs.HasFlag(Input.right))
                 player.ApplyForceToCenter(new Vector2(5, 0));
@@ -199,8 +203,27 @@ namespace GlowkiServer.Game
             if (inputs.HasFlag(Input.kickUp))
                 leg.MotorSpeed = -footSpeed;
 
-            if (inputs.HasFlag(Input.up) && contacts.CanJump > 0)
-                player.ApplyLinearImpulseToCenter(new Vector2(0, -0.4f));
+            var jump = inputs.HasFlag(Input.up);
+            if (jump && !jumpHeld && contacts.OnGround(player))
+            {
+                var speed = JumpSpeedFor(player, foot);
+                player.SetLinearVelocity(new Vector2(player.GetLinearVelocity().X, -speed));
+                foot.SetLinearVelocity(new Vector2(foot.GetLinearVelocity().X, -speed));
+            }
+            jumpHeld = jump;
+        }
+
+        /// <summary>
+        /// Prędkość wyskoku, z którą gracz razem ze stopą doleci na JumpHeight.
+        /// Gracz ma zmniejszoną grawitację, a stopa pełną, więc stopa ściąga go w dół
+        /// tym mocniej, im jest cięższa. Stopy graczy mają różne rozmiary, dlatego
+        /// liczymy wypadkową grawitację dla każdego osobno — obaj skaczą tak samo wysoko.
+        /// </summary>
+        private float JumpSpeedFor(Body player, Body foot)
+        {
+            float mp = player.GetMass(), mf = foot.GetMass();
+            float g = world.GetGravity().Y * (mp * player.GetGravityScale() + mf * foot.GetGravityScale()) / (mp + mf);
+            return MathF.Sqrt(2 * g * JumpHeight);
         }
 
         /// <summary>Pozycje w pikselach: [id, x, y, kąt, id, x, y, kąt, ...].</summary>

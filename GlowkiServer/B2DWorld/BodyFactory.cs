@@ -267,24 +267,32 @@ namespace GlowkiServer.B2DWorld
     /// </summary>
     public class MatchContactListener : Box2D.NetStandard.Dynamics.World.Callbacks.ContactListener
     {
-        public int CanJump = 1;
-        private int buffer = 6;
+        // Ile kontaktów z podłogą ma czujnik pod każdym graczem ("elo" w BodyFactory).
+        // Osobno dla każdego gracza, żeby jeden nie mógł skakać dzięki temu, że drugi stoi.
+        private readonly Dictionary<Body, int> floorContacts = new();
 
         public event Action<Goal> BallInGoal;
         public event Action<Body> BonusTaken;
 
+        public bool OnGround(Body player) => floorContacts.GetValueOrDefault(player) > 0;
+
         private static bool Involves(in Contact contact, string tag) =>
             contact.FixtureA.UserData?.ToString() == tag || contact.FixtureB.UserData?.ToString() == tag;
 
+        /// <summary>Ciało gracza, jeśli to kontakt jego czujnika stóp z podłogą; inaczej null.</summary>
+        private static Body PlayerOnFloor(in Contact contact)
+        {
+            if (!Involves(contact, "floor")) return null;
+            if (contact.FixtureA.UserData?.ToString() == "elo") return contact.FixtureA.Body;
+            if (contact.FixtureB.UserData?.ToString() == "elo") return contact.FixtureB.Body;
+            return null;
+        }
+
         public override void BeginContact(in Contact contact)
         {
-            if (Involves(contact, "elo") && Involves(contact, "floor"))
-            {
-                if (buffer == 0)
-                    ++CanJump;
-                else
-                    buffer--;
-            }
+            var player = PlayerOnFloor(contact);
+            if (player != null)
+                floorContacts[player] = floorContacts.GetValueOrDefault(player) + 1;
 
             if (!Involves(contact, "Ball"))
                 return;
@@ -304,13 +312,9 @@ namespace GlowkiServer.B2DWorld
 
         public override void EndContact(in Contact contact)
         {
-            if (Involves(contact, "elo") && Involves(contact, "floor"))
-            {
-                if (buffer == 0)
-                    --CanJump;
-                else
-                    buffer--;
-            }
+            var player = PlayerOnFloor(contact);
+            if (player != null)
+                floorContacts[player] = Math.Max(0, floorContacts.GetValueOrDefault(player) - 1);
         }
 
         public override void PostSolve(in Contact contact, in ContactImpulse impulse) { }
