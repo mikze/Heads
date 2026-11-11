@@ -12,8 +12,19 @@ export interface LobbyPlayer {
 }
 
 export interface LobbyState {
+    id: string;
+    name: string;
     inMatch: boolean;
     players: LobbyPlayer[];
+}
+
+export interface RoomInfo {
+    id: string;
+    name: string;
+    host: string | null;
+    players: number;
+    maxPlayers: number;
+    inMatch: boolean;
 }
 
 export interface ChatMessage {
@@ -54,9 +65,17 @@ const session = createSlice({
 
 const lobby = createSlice({
     name: 'lobby',
-    initialState: { inMatch: false, players: [] } as LobbyState,
+    initialState: { id: '', name: '', inMatch: false, players: [] } as LobbyState,
     reducers: {
         setLobby: (_s, a: PayloadAction<LobbyState>) => a.payload,
+    },
+});
+
+const rooms = createSlice({
+    name: 'rooms',
+    initialState: { list: [] as RoomInfo[] },
+    reducers: {
+        setRooms: (s, a: PayloadAction<RoomInfo[]>) => { s.list = a.payload; },
     },
 });
 
@@ -92,6 +111,7 @@ const match = createSlice({
 
 export const { setStatus, joined, backToMenu, matchStarted, matchEnded, setNotice } = session.actions;
 export const { setLobby } = lobby.actions;
+export const { setRooms } = rooms.actions;
 export const { addMessage, clearChat } = chat.actions;
 export const { setMatch, setScore } = match.actions;
 
@@ -99,6 +119,7 @@ export const store = configureStore({
     reducer: {
         session: session.reducer,
         lobby: lobby.reducer,
+        rooms: rooms.reducer,
         chat: chat.reducer,
         match: match.reducer,
     },

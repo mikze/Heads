@@ -1,5 +1,6 @@
 import { Alert, Box, Button, Chip, IconButton, Paper, Stack, Typography } from '@mui/material';
-import { leaveRoom, setReady, setSkin, startMatch } from '@/net/connection';
+import { useState } from 'react';
+import { inviteLink, leaveRoom, setReady, setSkin, startMatch } from '@/net/connection';
 import { LobbyPlayer } from '@/store/store';
 import { useAppSelector } from '@/store/hooks';
 import { SKIN_TEXTURES } from '@/game/skins';
@@ -55,7 +56,8 @@ function PlayerCard({ player, isMe, side }: { player?: LobbyPlayer; isMe: boolea
 }
 
 export default function Lobby() {
-    const { players, inMatch } = useAppSelector((s) => s.lobby);
+    const { id: roomId, name: roomName, players, inMatch } = useAppSelector((s) => s.lobby);
+    const [copied, setCopied] = useState(false);
     const myId = useAppSelector((s) => s.session.myId);
     const notice = useAppSelector((s) => s.session.notice);
 
@@ -64,11 +66,30 @@ export default function Lobby() {
     const amHost = host?.id === myId;
     const canStart = amHost && players.length === 2 && players.every((p) => p.ready) && !inMatch;
 
+    async function copyInvite() {
+        try {
+            await navigator.clipboard.writeText(inviteLink(roomId));
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Schowek bywa niedostępny (np. strona bez HTTPS) — wtedy pokazujemy link do ręcznego skopiowania.
+            window.prompt('Skopiuj link zaproszenia:', inviteLink(roomId));
+        }
+    }
+
     return (
         <Box sx={{ maxWidth: 1000, mx: 'auto', p: { xs: 2, md: 4 } }}>
             <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', mb: 3, gap: 2, flexWrap: 'wrap' }}>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 800 }}>Lobby</Typography>
-                <Button color="inherit" onClick={() => void leaveRoom()}>Wyjdź do menu</Button>
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}>{roomName}</Typography>
+                    <Typography variant="body2" color="text.secondary">Pokój {roomId}</Typography>
+                </Box>
+                <Stack direction="row" spacing={1}>
+                    <Button variant="outlined" onClick={() => void copyInvite()}>
+                        {copied ? 'Skopiowano ✓' : 'Kopiuj link zaproszenia'}
+                    </Button>
+                    <Button color="inherit" onClick={() => void leaveRoom()}>Wyjdź do menu</Button>
+                </Stack>
             </Stack>
 
             {notice && <Alert severity="info" sx={{ mb: 2 }}>{notice}</Alert>}

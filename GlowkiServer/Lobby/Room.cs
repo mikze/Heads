@@ -12,15 +12,14 @@ namespace GlowkiServer.Lobby
         public bool Ready { get; set; }
     }
 
-    public record JoinResult(bool Ok, string Error);
+    public record JoinResult(bool Ok, string Error, Room Room = null);
 
     /// <summary>
-    /// Jeden pokój na dwóch graczy. Pierwszy, kto wejdzie, jest gospodarzem:
+    /// Pokój na dwóch graczy. Pierwszy, kto wejdzie, jest gospodarzem:
     /// gra po prawej i to on startuje mecz.
     /// </summary>
-    public class Room
+    public sealed class Room : IDisposable
     {
-        public const string Group = "room";
         public const int MaxPlayers = 2;
         public const int SkinCount = 3;
         private const int MaxNickLength = 16;
@@ -29,11 +28,27 @@ namespace GlowkiServer.Lobby
         private readonly object gate = new();
         private readonly List<LobbyPlayer> players = new();
         private readonly IHubContext<GameHub> hub;
+        private readonly Func<Task> changed;
         private Match match;
 
-        public Room(IHubContext<GameHub> hub)
+        public string Id { get; }
+        public string Name { get; }
+
+        /// <summary>Grupa SignalR tego pokoju — czat, lobby i klatki meczu idą tylko do jego graczy.</summary>
+        public string Group => $"room:{Id}";
+
+        /// <param name="changed">Wywoływane po każdej zmianie widocznej na liście pokoi.</param>
+        public Room(string id, string name, IHubContext<GameHub> hub, Func<Task> changed)
         {
+            Id = id;
+            Name = name;
             this.hub = hub;
+            this.changed = changed;
+        }
+
+        public int PlayerCount
+        {
+            get { lock (gate) return players.Count; }
         }
 
         private IClientProxy Everyone => hub.Clients.Group(Group);
@@ -60,8 +75,8 @@ namespace GlowkiServer.Lobby
                 players.Add(new LobbyPlayer { ConnectionId = connectionId, Nick = nick });
             }
 
-            Console.WriteLine($"{nick} dołączył do pokoju.");
-            return new JoinResult(true, null);
+            Console.WriteLine($"{nick} dołączył do pokoju \"{Name}\" ({Id}).");
+            return new JoinResult(true, null, this);
         }
 
         /// <summary>Gracz wychodzi z pokoju (rozłączenie albo powrót do menu).</summary>
@@ -77,7 +92,7 @@ namespace GlowkiServer.Lobby
                 matchEnded = StopMatchLocked();
             }
 
-            Console.WriteLine($"{player.Nick} opuścił pokój.");
+            Console.WriteLine($"{player.Nick} opuścił pokój \"{Name}\" ({Id}).");
             if (matchEnded)
                 await Everyone.SendAsync("MatchEnded", $"{player.Nick} opuścił mecz");
             await SystemChat($"{player.Nick} opuścił pokój");
@@ -143,7 +158,7 @@ namespace GlowkiServer.Lobby
                 match.Start();
             }
 
-            Console.WriteLine("Mecz wystartował.");
+            Console.WriteLine($"Mecz w pokoju \"{Name}\" ({Id}) wystartował.");
             await Everyone.SendAsync("MatchStarted", description);
             await BroadcastLobby();
             return null;
@@ -177,7 +192,11 @@ namespace GlowkiServer.Lobby
         public Task SystemChat(string text) =>
             Everyone.SendAsync("Chat", new { nick = "", text, system = true });
 
-        public Task BroadcastLobby() => Everyone.SendAsync("Lobby", Snapshot());
+        public async Task BroadcastLobby()
+        {
+            await Everyone.SendAsync("Lobby", Snapshot());
+            await changed();
+        }
 
         public object Snapshot()
         {
@@ -185,6 +204,8 @@ namespace GlowkiServer.Lobby
             {
                 return new
                 {
+                    id = Id,
+                    name = Name,
                     inMatch = match != null,
                     players = players.Select((p, i) => new
                     {
@@ -196,6 +217,35 @@ namespace GlowkiServer.Lobby
                     }).ToArray()
                 };
             }
+        }
+
+        /// <summary>Krótki opis do listy pokoi w menu.</summary>
+        public object Info()
+        {
+            lock (gate)
+            {
+                return new
+                {
+                    id = Id,
+                    name = Name,
+                    host = players.FirstOrDefault()?.Nick,
+                    players = players.Count,
+                    maxPlayers = MaxPlayers,
+                    inMatch = match != null
+                };
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (gate)
+                StopMatchLocked();
+        }
+
+        public string NickOf(string connectionId)
+        {
+            lock (gate)
+                return Find(connectionId)?.Nick;
         }
 
         private LobbyPlayer Find(string connectionId) =>

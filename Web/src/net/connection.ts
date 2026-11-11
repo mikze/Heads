@@ -1,7 +1,7 @@
 import { HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
 import {
     addMessage, backToMenu, clearChat, joined, LobbyState, matchEnded, matchStarted,
-    MatchPlayer, Score, setLobby, setMatch, setNotice, setScore, setStatus, store,
+    MatchPlayer, RoomInfo, Score, setLobby, setMatch, setNotice, setRooms, setScore, setStatus, store,
 } from '@/store/store';
 import { EntityInfo, matchFeed } from './matchFeed';
 
@@ -38,6 +38,7 @@ function inRoom() {
 
 // Handlery nie mogą zwracać wartości — SignalR uznałby ją za odpowiedź dla serwera.
 function setUpHandlers(conn: HubConnection) {
+    conn.on('Rooms', (rooms: RoomInfo[]) => { store.dispatch(setRooms(rooms)); });
     conn.on('Lobby', (lobby: LobbyState) => { store.dispatch(setLobby(lobby)); });
     conn.on('Chat', (msg: { nick: string; text: string; system: boolean }) => { store.dispatch(addMessage(msg)); });
 
@@ -57,7 +58,10 @@ function setUpHandlers(conn: HubConnection) {
         store.dispatch(setStatus('connecting'));
         if (inRoom()) store.dispatch(backToMenu('Połączenie z serwerem zostało zerwane'));
     });
-    conn.onreconnected(() => store.dispatch(setStatus('connected')));
+    conn.onreconnected(() => {
+        store.dispatch(setStatus('connected'));
+        void refreshRooms();
+    });
     conn.onclose(() => {
         store.dispatch(setStatus('disconnected'));
         if (inRoom()) store.dispatch(backToMenu('Połączenie z serwerem zostało zerwane'));
@@ -84,7 +88,10 @@ export function connect(): Promise<void> {
 
     store.dispatch(setStatus('connecting'));
     starting = conn.start()
-        .then(() => { store.dispatch(setStatus('connected')); })
+        .then(() => {
+            store.dispatch(setStatus('connected'));
+            void refreshRooms();
+        })
         .catch((e) => {
             console.warn('Nie udało się połączyć z serwerem', e);
             store.dispatch(setStatus('disconnected'));
@@ -101,7 +108,36 @@ function send(method: string, ...args: unknown[]) {
     return connection.send(method, ...args).catch((e) => console.warn(`Nie udało się wysłać ${method}`, e));
 }
 
-export async function joinRoom(nick: string): Promise<string | null> {
+export async function refreshRooms() {
+    if (connection?.state !== HubConnectionState.Connected) return;
+    try {
+        store.dispatch(setRooms(await connection.invoke<RoomInfo[]>('ListRooms')));
+    } catch (e) {
+        console.warn('Nie udało się pobrać listy pokoi', e);
+    }
+}
+
+// Id pokoju w adresie strony (?room=abc12) — taki adres można wysłać znajomemu jako zaproszenie.
+const ROOM_PARAM = 'room';
+
+export function roomFromUrl(): string | null {
+    return new URLSearchParams(window.location.search).get(ROOM_PARAM);
+}
+
+export function inviteLink(roomId: string): string {
+    const url = new URL(window.location.href);
+    url.search = `?${ROOM_PARAM}=${roomId}`;
+    return url.toString();
+}
+
+function setRoomInUrl(roomId: string | null) {
+    const url = new URL(window.location.href);
+    if (roomId) url.searchParams.set(ROOM_PARAM, roomId);
+    else url.searchParams.delete(ROOM_PARAM);
+    window.history.replaceState(null, '', url);
+}
+
+async function enter(method: 'Join' | 'CreateRoom', ...args: unknown[]): Promise<string | null> {
     try {
         await connect();
     } catch {
@@ -109,17 +145,25 @@ export async function joinRoom(nick: string): Promise<string | null> {
     }
     // Czyścimy czat przed dołączeniem, bo serwer od razu wysyła komunikat o wejściu do pokoju.
     store.dispatch(clearChat());
-    const result = await connection!.invoke<JoinResponse>('Join', nick);
+    const result = await connection!.invoke<JoinResponse>(method, ...args);
     if (!result.ok) return result.error ?? 'Nie udało się dołączyć';
 
-    if (result.lobby) store.dispatch(setLobby(result.lobby));
+    if (result.lobby) {
+        store.dispatch(setLobby(result.lobby));
+        setRoomInUrl(result.lobby.id);
+    }
     store.dispatch(joined(result.id!));
     return null;
 }
 
+export const joinRoom = (nick: string, roomId: string) => enter('Join', nick, roomId);
+export const createRoom = (nick: string, name: string) => enter('CreateRoom', nick, name);
+
 export async function leaveRoom() {
     await send('LeaveRoom');
+    setRoomInUrl(null);
     store.dispatch(backToMenu(null));
+    void refreshRooms();
 }
 
 export const setSkin = (skin: number) => send('SetSkin', skin);

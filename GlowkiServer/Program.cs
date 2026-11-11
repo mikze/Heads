@@ -5,7 +5,7 @@ using Microsoft.Extensions.FileProviders;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<Room>();
+builder.Services.AddSingleton<RoomManager>();
 
 // Front w trybie deweloperskim (next dev) działa na innym porcie, więc musi móc się połączyć.
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy

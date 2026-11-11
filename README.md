@@ -9,7 +9,7 @@ Sieciowa gra dla dwóch graczy w stylu „piłki główkami”: dwie postaci z d
 
 Przeglądarka wysyła serwerowi tylko wciśnięte klawisze. Serwer liczy fizykę i około 100 razy na sekundę odsyła pozycje piłki, graczy i stóp.
 
-Jest jeden pokój na dwóch graczy. Pierwszy gracz, który wejdzie, jest gospodarzem: gra po prawej i rozpoczyna mecz, gdy obaj gracze zgłoszą gotowość.
+Na serwerze może być wiele pokoi naraz, każdy na dwóch graczy. W menu widać listę otwartych pokoi; można też utworzyć własny i wysłać znajomemu link z zaproszeniem (`?room=<id>`). Twórca pokoju jest gospodarzem: gra po prawej i rozpoczyna mecz, gdy obaj gracze zgłoszą gotowość. Pusty pokój znika automatycznie.
 
 ## Uruchomienie
 
